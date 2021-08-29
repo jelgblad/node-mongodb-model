@@ -33,7 +33,7 @@ export interface IModelOptions {
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
-export abstract class MongoModel<T extends OptionalId<Document>> {
+export class MongoModel<T extends OptionalId<Document>> {
 
   readonly db: () => Promise<Db>
   readonly collectionName: string
