@@ -18,11 +18,11 @@ import {
 import { IMongoJSONSchema } from './IMongoJSONSchema'
 // import { this.db } from '../database'
 
-interface IQueryOptions {
+export interface IQueryOptions {
   populate?: string[]
 }
 
-interface IModelOptions {
+export interface IModelOptions {
   schema?: IMongoJSONSchema,
   indices?: IndexDefinition[],
   timeseries?: {

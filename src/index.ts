@@ -1,2 +1,2 @@
-export { MongoModel } from './MongoModel'
-export { IMongoJSONSchema } from './IMongoJSONSchema'
+export * from './MongoModel'
+export * from './IMongoJSONSchema'
