@@ -145,8 +145,13 @@ export class MongoModel<T extends OptionalId<Document>> {
 
   findOne(query?: Filter<Document>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
 
-    return this.find(query, options, queryOptions)
-      .then(x => x.length > 0 ? x[0] : null) // TODO: throw error, like findFyId??
+    return this.collection()
+      .then(col => col.findOne(query, options))
+      .then(this.onBeforeFind)
+      .then(d => this._populateAll(d, queryOptions?.populate || []));
+
+    // return this.find(query, options, queryOptions)
+    //   .then(x => x.length > 0 ? x[0] : null) // TODO: throw error, like findFyId??
   }
 
   findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
