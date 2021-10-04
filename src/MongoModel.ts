@@ -202,6 +202,8 @@ export class MongoModel<T extends OptionalId<Document>> {
 
   private async _populateAll(doc: any, properties: string[]) {
 
+    if (!doc) return;
+
     const populatedProps = await Promise.all(properties.map(prop => this.populate(doc, prop)))
 
     const newDoc = Object.assign({}, doc)
