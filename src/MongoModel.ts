@@ -154,13 +154,13 @@ export class MongoModel<T extends OptionalId<Document>> {
     return this.db()
       .then(db => db.collection<T>(this.collectionName))
       .then(collection => collection.findOne({ _id: new ObjectId(id) }, options))
-      .then(d => {
-        if (!d) {
-          throw new Error('not_found')
-        }
+      // .then(d => {
+      //   if (!d) {
+      //     throw new Error('not_found')
+      //   }
 
-        return d
-      })
+      //   return d
+      // })
       .then(this.onBeforeFind)
       .then(d => this._populateAll(d, queryOptions?.populate || []))
   }
