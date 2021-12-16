@@ -3,6 +3,7 @@
     "module": "commonjs",
     "target": "ES6",
     "declaration": true,
+    "declarationMap": true,
     "outDir": "./dist",
     "moduleResolution": "Node",
     "sourceMap": true,
