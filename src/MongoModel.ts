@@ -110,7 +110,15 @@ export class MongoModel<T extends OptionalId<Document>> {
     }
 
     console.log(`Collection "${this.collectionName}" ready.`)
+
+    // Execute callbacks
     this.collectionReadyCallbacks.forEach(cb => cb())
+
+    // Remove callbacks
+    this.collectionReadyCallbacks.forEach(cb => {
+      // Remove callback function
+      this.collectionReadyCallbacks.splice(this.collectionReadyCallbacks.indexOf(cb, 1))
+    })
   }
 
   onCollectionReady() {
@@ -119,8 +127,6 @@ export class MongoModel<T extends OptionalId<Document>> {
       const cb = () => {
         // Resolve promise
         resolve(null)
-        // Remove callback function
-        this.collectionReadyCallbacks.splice(this.collectionReadyCallbacks.indexOf(cb, 1))
       }
       // Add callback function
       this.collectionReadyCallbacks.push(cb)
