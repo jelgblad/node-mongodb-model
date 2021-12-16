@@ -31,11 +31,12 @@ export interface IModelOptions {
 }
 
 type MiddlewareBeforeFind<T> = (doc: T) => Promise<T> | T | void
-type MiddlewareBeforeCreate = (data: any) => Promise<any> | void
+type MiddlewareBeforeCreate = (data: any) => Promise<any> | any | void
 type MiddlewareAfterCreate<T> = (result: InsertOneResult<T>, data: Partial<T>) => (Promise<InsertOneResult<T>> | InsertOneResult<T>) | void
-type MiddlewareBeforeUpdate<T> = (query: Filter<T>, data: any) => Promise<any> | void
-type MiddlewareAfterUpdate<T> = (result: Document | UpdateResult, query: Filter<T>) => Promise<UpdateResult> | void
-type MiddlewareAfterDelete<T> = (result: DeleteResult, query: Filter<T>, documents: T[]) => Promise<DeleteResult> | void
+type MiddlewareBeforeUpdate<T> = (query: Filter<T>, data: any) => Promise<any> | any | void
+type MiddlewareAfterUpdate<T> = (result: Document | UpdateResult, query: Filter<T>) => Promise<UpdateResult> | UpdateResult | void
+type MiddlewareBeforeDelete<T> = (query: Filter<T>, documents: T[]) => Promise<void> | void
+type MiddlewareAfterDelete<T> = (result: DeleteResult, query: Filter<T>, documents: T[]) => Promise<DeleteResult> | DeleteResult | void
 
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
@@ -56,8 +57,13 @@ export class MongoModel<T extends OptionalId<Document>> {
     afterCreate: [] as MiddlewareAfterCreate<T>[],
     beforeUpdate: [] as MiddlewareBeforeUpdate<T>[],
     afterUpdate: [] as MiddlewareAfterUpdate<T>[],
+    beforeDelete: [] as MiddlewareBeforeDelete<T>[],
     afterDelete: [] as MiddlewareAfterDelete<T>[],
   }
+
+  private populateCallbacks: {
+    [property: string]: ((doc: any) => Promise<any> | any)
+  } = {}
 
   constructor(db: () => Promise<Db>, collectionName: string, options?: IModelOptions) {
     this.db = db
@@ -184,8 +190,24 @@ export class MongoModel<T extends OptionalId<Document>> {
     this._middleware.afterUpdate.push(middleware)
   }
 
+  beforeDelete(middleware: MiddlewareBeforeDelete<T>) {
+    this._middleware.beforeDelete.push(middleware)
+  }
+
   afterDelete(middleware: MiddlewareAfterDelete<T>) {
     this._middleware.afterDelete.push(middleware)
+  }
+
+
+  populate(property: string, callback: (doc: any) => Promise<any> | any) {
+
+    if (process.env.NODE_ENV === 'development') {
+      if (this.populateCallbacks[property]) {
+        console.warn(`Populate-callback for property "${property}" on model "${this.collectionName}" was specified more than once. This might be a bug in your code...`)
+      }
+    }
+
+    this.populateCallbacks[property] = callback;
   }
 
 
@@ -282,7 +304,16 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     const col = await this.collection()
 
-    const documents = await this.find(query)
+    // const documents = await this.find(query)
+    const documents = await col.find(query, options).toArray() as T[]
+
+    console.log(documents)
+
+    // Call middleware
+    for (let i = 0; i < this._middleware.beforeDelete.length; i++) {
+      const mw = this._middleware.beforeDelete[i];
+      await mw(query, documents)
+    }
 
     let result = await col.deleteMany(query)
 
@@ -293,7 +324,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     // Call middleware
     for (let i = 0; i < this._middleware.afterDelete.length; i++) {
       const mw = this._middleware.afterDelete[i];
-      result = await mw(Object.assign({}, result), query, documents) || result; //TODO: Deep copy!
+      result = await mw(result, query, documents) || result; //TODO: Deep copy!
     }
 
     return result;
@@ -303,7 +334,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (!doc) return;
 
-    const populatedProps = await Promise.all(properties.map(prop => this.populate(doc, prop)))
+    const populatedProps = await Promise.all(properties.map(prop => this._populate(doc, prop)))
 
     const newDoc = Object.assign({}, doc)
 
@@ -314,6 +345,17 @@ export class MongoModel<T extends OptionalId<Document>> {
     return newDoc
   }
 
-  // Override this method to populate properties of document before returned
-  protected populate(doc: T, property: string) { return doc[property] }
+  private async _populate(doc: any, property: string) {
+
+    if (!this.populateCallbacks[property]) {
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Property "${property}" does not exist on document`)
+      }
+
+      return doc[property]
+    }
+
+    return this.populateCallbacks[property](doc)
+  }
 }
