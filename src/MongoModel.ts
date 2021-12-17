@@ -23,6 +23,8 @@ export interface IQueryOptions {
 
 export interface IModelOptions {
   schema?: IMongoJSONSchema,
+  validationAction?: 'error' | 'warn',
+  validationLevel?: 'off' | 'moderate' | 'strict',
   indices?: IndexDefinition[],
   timeseries?: {
     timeseries: TimeSeriesCollectionOptions,
@@ -86,6 +88,8 @@ export class MongoModel<T extends OptionalId<Document>> {
     const validator = {
       ...(options?.schema && { $jsonSchema: options.schema })
     }
+    const validationAction = options?.validationAction || undefined;
+    const validationLevel = options?.validationLevel || undefined;
 
     const collectionExists = await db.listCollections({ name: this.collectionName }).toArray().then(cols => cols.length > 0)
 
@@ -97,6 +101,8 @@ export class MongoModel<T extends OptionalId<Document>> {
 
       try {
         await db.createCollection(this.collectionName, {
+          ...(validationLevel && { validationAction }),
+          ...(validationLevel && { validationLevel }),
           ...(options?.schema && { validator }),
           ...(options?.timeseries && { timeseries: options?.timeseries.timeseries }),
           ...(options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: options?.timeseries.expireAfterSeconds }),
@@ -116,6 +122,8 @@ export class MongoModel<T extends OptionalId<Document>> {
 
         // Update validation
         await db.command({ collMod: this.collectionName, validator })
+        await db.command({ collMod: this.collectionName, validationAction: validationAction })
+        await db.command({ collMod: this.collectionName, validationLevel: validationLevel })
       }
     }
 
