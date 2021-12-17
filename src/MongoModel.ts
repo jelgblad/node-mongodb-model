@@ -99,7 +99,7 @@ export class MongoModel<T extends OptionalId<Document>> {
         await db.createCollection(this.collectionName, {
           ...(options?.schema && { validator }),
           ...(options?.timeseries && { timeseries: options?.timeseries.timeseries }),
-          ...(options?.timeseries.expireAfterSeconds && { expireAfterSeconds: options?.timeseries.expireAfterSeconds }),
+          ...(options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: options?.timeseries.expireAfterSeconds }),
         })
       }
       catch (err) {
