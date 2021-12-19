@@ -62,11 +62,6 @@ export class MongoModel<T extends OptionalId<Document>> {
     this.prepareCollection(options)
   }
 
-  // protected collection() {
-  //   return this.db()
-  //     .then(db => db.collection(this.collectionName))
-  // }
-
   collection() {
     return new Promise<Collection>(resolve => {
 
@@ -283,7 +278,6 @@ export class MongoModel<T extends OptionalId<Document>> {
       }
     );
 
-    // let data = await this.onBeforeUpdate(query, data)
     let result = await col.updateOne(filter, updateFilter, options)
 
     // Call post-hook
