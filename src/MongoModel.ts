@@ -11,9 +11,9 @@ import {
   InsertOneResult,
   UpdateResult,
   DeleteResult,
-  CreateCollectionOptions,
   TimeSeriesCollectionOptions,
-  Db
+  Db,
+  Collection
 } from 'mongodb'
 import { IMongoJSONSchema } from './IMongoJSONSchema'
 
@@ -32,14 +32,10 @@ export interface IModelOptions {
   }
 }
 
-type MiddlewareBeforeFind<T> = (doc: T) => Promise<T> | T | void
-type MiddlewareBeforeCreate = (data: any) => Promise<any> | any | void
-type MiddlewareAfterCreate<T> = (result: InsertOneResult<T>, data: Partial<T>) => (Promise<InsertOneResult<T>> | InsertOneResult<T>) | void
-type MiddlewareBeforeUpdate<T> = (query: Filter<T>, data: any) => Promise<any> | any | void
-type MiddlewareAfterUpdate<T> = (result: Document | UpdateResult, query: Filter<T>) => Promise<UpdateResult> | UpdateResult | void
-type MiddlewareBeforeDelete<T> = (query: Filter<T>, documents: T[]) => Promise<void> | void
-type MiddlewareAfterDelete<T> = (result: DeleteResult, query: Filter<T>, documents: T[]) => Promise<DeleteResult> | DeleteResult | void
-
+type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((doc: T) => Promise<T> | T | void) | void;
+type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => ((result: InsertOneResult<T>) => Promise<InsertOneResult<T>> | InsertOneResult<T> | void) | void;
+type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => ((result: UpdateResult) => Promise<UpdateResult> | UpdateResult | void) | void;
+type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((result: DeleteResult) => Promise<DeleteResult> | DeleteResult | void) | void;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
@@ -53,18 +49,8 @@ export class MongoModel<T extends OptionalId<Document>> {
   private isCollectionReady = false;
   private collectionReadyCallbacks: (() => void)[] = []
 
-  private _middleware = {
-    beforeFind: [] as MiddlewareBeforeFind<T>[],
-    beforeCreate: [] as MiddlewareBeforeCreate[],
-    afterCreate: [] as MiddlewareAfterCreate<T>[],
-    beforeUpdate: [] as MiddlewareBeforeUpdate<T>[],
-    afterUpdate: [] as MiddlewareAfterUpdate<T>[],
-    beforeDelete: [] as MiddlewareBeforeDelete<T>[],
-    afterDelete: [] as MiddlewareAfterDelete<T>[],
-  }
-
   private populateCallbacks: {
-    [property: string]: ((doc: any) => Promise<any> | any)
+    [property: string]: ((doc: any) => Promise<any>)
   } = {}
 
   constructor(db: () => Promise<Db>, collectionName: string, options?: IModelOptions) {
@@ -76,9 +62,27 @@ export class MongoModel<T extends OptionalId<Document>> {
     this.prepareCollection(options)
   }
 
-  protected collection() {
-    return this.db()
-      .then(db => db.collection(this.collectionName))
+  // protected collection() {
+  //   return this.db()
+  //     .then(db => db.collection(this.collectionName))
+  // }
+
+  collection() {
+    return new Promise<Collection>(resolve => {
+
+      // Return immediately if ready
+      if (this.isCollectionReady) {
+        return resolve(this.db().then(db => db.collection(this.collectionName)))
+      }
+
+      // Define callback function
+      const cb = () => {
+        // Resolve promise
+        return resolve(this.db().then(db => db.collection(this.collectionName)))
+      }
+      // Add callback function
+      this.collectionReadyCallbacks.push(cb)
+    })
   }
 
   private async prepareCollection(options?: IModelOptions) {
@@ -155,59 +159,15 @@ export class MongoModel<T extends OptionalId<Document>> {
     })
   }
 
-  collectionReady() {
-    return new Promise(resolve => {
 
-      // Return immediately if ready
-      if (this.isCollectionReady) {
-        return resolve(null)
-      }
-
-      // Define callback function
-      const cb = () => {
-        // Resolve promise
-        resolve(null)
-      }
-      // Add callback function
-      this.collectionReadyCallbacks.push(cb)
-    })
-  }
+  // Hooks
+  onFind: HookOnFind<T> = undefined;
+  onCreate: HookOnCreate<T> = undefined;
+  onUpdate: HookOnUpdate<T> = undefined;
+  onDelete: HookOnDelete<T> = undefined;
 
 
-
-
-  // Functions to register middleware
-
-  beforeFind(middleware: MiddlewareBeforeFind<T>) {
-    this._middleware.beforeFind.push(middleware)
-  }
-
-  beforeCreate(middleware: MiddlewareBeforeCreate) {
-    this._middleware.beforeCreate.push(middleware)
-  }
-
-  afterCreate(middleware: MiddlewareAfterCreate<T>) {
-    this._middleware.afterCreate.push(middleware)
-  }
-
-  beforeUpdate(middleware: MiddlewareBeforeUpdate<T>) {
-    this._middleware.beforeUpdate.push(middleware)
-  }
-
-  afterUpdate(middleware: MiddlewareAfterUpdate<T>) {
-    this._middleware.afterUpdate.push(middleware)
-  }
-
-  beforeDelete(middleware: MiddlewareBeforeDelete<T>) {
-    this._middleware.beforeDelete.push(middleware)
-  }
-
-  afterDelete(middleware: MiddlewareAfterDelete<T>) {
-    this._middleware.afterDelete.push(middleware)
-  }
-
-
-  populate(property: string, callback: (doc: any) => Promise<any> | any) {
+  populate(property: string, callback: (doc: T) => Promise<any> | any) {
 
     if (process.env.NODE_ENV === 'development') {
       if (this.populateCallbacks[property]) {
@@ -219,120 +179,144 @@ export class MongoModel<T extends OptionalId<Document>> {
   }
 
 
-  _beforeFindCall = async (data) => {
-    // Call middleware
-    for (let i = 0; i < this._middleware.beforeFind.length; i++) {
-      const mw = this._middleware.beforeFind[i];
-      data = await mw(Object.assign({}, data)) || data; //TODO: Deep copy!
-    }
-    return data;
-  }
-
-
-  exists(query?: Filter<Document>): Promise<boolean> {
+  exists(filter?: Filter<T>): Promise<boolean> {
 
     return this.collection()
-      .then(col => col.find(query).limit(1).count())
+      .then(col => col.find(filter).limit(1).count())
       .then(count => count === 1)
   }
 
-  find(query?: Filter<Document>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T[]> {
+  async find(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T[]> {
 
-    return this.db()
-      .then(db => db.collection<T>(this.collectionName))
-      .then(collection => collection.find(query, options).toArray())
-      .then(x => Promise.all(x.map(this._beforeFindCall)))
-      .then(x => Promise.all(x.map(d => this._populateAll(d, queryOptions?.populate || []))))
+    const col = await this.collection()
+
+    // Call pre-hook
+    const postOnFind = this.onFind && this.onFind(filter, (newFilter) => {
+      filter = newFilter;
+    })
+
+    let data = await col.find(filter, options).toArray() as T[]
+    data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])))
+
+    // Call post-hook
+    if (postOnFind) {
+      data = await Promise.all(data.map(d => postOnFind(d) || d))
+    }
+
+    return data;
   }
 
-  findOne(query?: Filter<Document>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
+  async findOne(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
 
-    return this.collection()
-      .then(col => col.findOne(query, options))
-      .then(this._beforeFindCall)
-      .then(d => this._populateAll(d, queryOptions?.populate || []));
+    const col = await this.collection()
+
+    // Call pre-hook
+    const postOnFind = this.onFind && this.onFind(filter, (newFilter) => {
+      filter = newFilter;
+    })
+
+    let data = await col.findOne(filter, options) as T
+    data = await this._populateAll(data, queryOptions?.populate || [])
+
+    // Call post-hook
+    if (postOnFind) {
+      data = await postOnFind(data) || data;
+    }
+
+    return data;
 
     // return this.find(query, options, queryOptions)
     //   .then(x => x.length > 0 ? x[0] : null) // TODO: throw error, like findFyId??
   }
 
-  findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
+  async findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
 
-    return this.db()
-      .then(db => db.collection<T>(this.collectionName))
-      .then(collection => collection.findOne({ _id: new ObjectId(id) }, options))
-      .then(this._beforeFindCall)
-      .then(d => this._populateAll(d, queryOptions?.populate || []))
+    const col = await this.collection()
+    let filter = { _id: new ObjectId(id) } as Filter<T>
+
+    // Call pre-hook
+    const postOnFind = this.onFind && this.onFind(filter, (newFilter) => {
+      filter = newFilter;
+    })
+
+    let data = await col.findOne(filter, options) as T
+    data = await this._populateAll(data, queryOptions?.populate || [])
+
+    // Call post-hook
+    if (postOnFind) {
+      data = await postOnFind(data) || data;
+    }
+
+    return data;
   }
 
   async create(data: Partial<T>) {
 
     const col = await this.collection()
 
-    // Call middleware
-    for (let i = 0; i < this._middleware.beforeCreate.length; i++) {
-      const mw = this._middleware.beforeCreate[i];
-      data = await mw(Object.assign({}, data)) || data; //TODO: Deep copy!
-    }
+    // Call pre-hook
+    const postOnCrate = this.onCreate && this.onCreate(data, (newData) => { //TODO: Deep copy data!
+      data = newData;
+    })
 
     let result = await col.insertOne(data)
 
-    // Call middleware
-    for (let i = 0; i < this._middleware.afterCreate.length; i++) {
-      const mw = this._middleware.afterCreate[i];
-      result = await mw(Object.assign({}, result), data) || result; //TODO: Deep copy!
+    // Call post-hook
+    if (postOnCrate) {
+      result = await postOnCrate(result) || result;
     }
 
     return result;
   }
 
-  async updateOne(query: Filter<Document>, data: UpdateFilter<T>, options?: UpdateOptions) {
+  async updateOne(filter: Filter<Document>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
 
     const col = await this.collection()
 
-    // Call middleware
-    for (let i = 0; i < this._middleware.beforeUpdate.length; i++) {
-      const mw = this._middleware.beforeUpdate[i];
-      data = await mw(query, Object.assign({}, data)) || data; //TODO: Deep copy!
-    }
+    // Call pre-hook
+    const postOnUpdate = this.onUpdate && this.onUpdate(
+      filter, (newFilter) => {
+        filter = newFilter;
+      },
+      updateFilter, (newUpdateFilter) => {
+        updateFilter = newUpdateFilter;
+      }
+    );
 
     // let data = await this.onBeforeUpdate(query, data)
-    let result = await col.updateOne(query, data, options)
+    let result = await col.updateOne(filter, updateFilter, options)
 
-    // Call middleware
-    for (let i = 0; i < this._middleware.afterUpdate.length; i++) {
-      const mw = this._middleware.afterUpdate[i];
-      result = await mw(Object.assign({}, result), data) || result; //TODO: Deep copy!
+    // Call post-hook
+    if (postOnUpdate) {
+      result = await postOnUpdate(result) || result;
     }
 
     return result;
   }
 
-  async delete(query?: Filter<T>, options?: FindOptions<T>) {
+  async delete(filter?: Filter<T>, options?: FindOptions<T>) {
 
     const col = await this.collection()
 
+    // Call pre-hook
+    const postOnDelete = this.onDelete && this.onDelete(filter, (newFilter) => {
+      filter = newFilter;
+    })
+
     // const documents = await this.find(query)
-    const documents = await col.find(query, options).toArray() as T[]
+    // const documents = await col.find(filter, options).toArray() as T[]
 
-    console.log(documents)
+    // console.log(documents)
 
-    // Call middleware
-    for (let i = 0; i < this._middleware.beforeDelete.length; i++) {
-      const mw = this._middleware.beforeDelete[i];
-      await mw(query, documents)
-    }
-
-    let result = await col.deleteMany(query)
+    let result = await col.deleteMany(filter)
 
     // if (result.deletedCount < 1) {
     //   // throw new Error('not_found')
     // }
 
-    // Call middleware
-    for (let i = 0; i < this._middleware.afterDelete.length; i++) {
-      const mw = this._middleware.afterDelete[i];
-      result = await mw(result, query, documents) || result; //TODO: Deep copy!
+    // Call post-hook
+    if (postOnDelete) {
+      result = await postOnDelete(result) || result;
     }
 
     return result;
@@ -358,12 +342,13 @@ export class MongoModel<T extends OptionalId<Document>> {
     if (!this.populateCallbacks[property]) {
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Property "${property}" does not exist on document`)
+        console.log(`No populate-handler for "${property}"`)
       }
 
       return doc[property]
     }
 
+    // Call populate callback for property
     return this.populateCallbacks[property](doc)
   }
 }
