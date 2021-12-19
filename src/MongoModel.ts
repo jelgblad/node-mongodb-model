@@ -264,7 +264,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     return result;
   }
 
-  async updateOne(filter: Filter<Document>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
+  async update(filter: Filter<Document>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
 
     const col = await this.collection()
 
@@ -278,7 +278,7 @@ export class MongoModel<T extends OptionalId<Document>> {
       }
     );
 
-    let result = await col.updateOne(filter, updateFilter, options)
+    let result = await col.updateMany(filter, updateFilter, options) as UpdateResult
 
     // Call post-hook
     if (postOnUpdate) {
