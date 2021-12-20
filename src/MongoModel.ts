@@ -155,13 +155,133 @@ export class MongoModel<T extends OptionalId<Document>> {
   }
 
 
-  // Hooks
-  onFind: HookOnFind<T> = undefined;
-  onCreate: HookOnCreate<T> = undefined;
-  onUpdate: HookOnUpdate<T> = undefined;
-  onDelete: HookOnDelete<T> = undefined;
+  /**
+   * Hooks
+   */
+
+  private _hookOnFind: HookOnFind<T> = undefined;
+  private _hookOnCreate: HookOnCreate<T> = undefined;
+  private _hookOnUpdate: HookOnUpdate<T> = undefined;
+  private _hookOnDelete: HookOnDelete<T> = undefined;
+
+  /**
+   * The **onFind**-hook runs when `find`, `findOne` or `findById` are called.
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
+   * ```typescript
+   * myModel.onFind(() => {
+   *  // This runs before
+   *  return () => {
+   *    // This runs after
+   *  }
+   * })
+   * ```
+   * @category Hooks
+   */
+  onFind(hook: HookOnFind<T>) {
+
+    if (process.env.NODE_ENV === 'development') {
+      if (this._hookOnFind) {
+        console.warn(`Callback for hook "onFind" was specified more than once. This might be a bug in your code...`)
+      }
+    }
+
+    this._hookOnFind = hook;
+  }
+
+  /**
+   * The **onCreate**-hook runs when `create` is called.
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
+   * ```typescript
+   * myModel.onCreate(() => {
+   *  // This runs before
+   *  return () => {
+   *    // This runs after
+   *  }
+   * })
+   * ```
+   * @category Hooks
+   */
+  onCreate(hook: HookOnCreate<T>) {
+
+    if (process.env.NODE_ENV === 'development') {
+      if (this._hookOnCreate) {
+        console.warn(`Callback for hook "onCreate" was specified more than once. This might be a bug in your code...`)
+      }
+    }
+
+    this._hookOnCreate = hook;
+  }
+
+  /**
+   * The **onUpdate**-hook runs when `update` is called.
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
+   * ```typescript
+   * myModel.onUpdate(() => {
+   *  // This runs before
+   *  return () => {
+   *    // This runs after
+   *  }
+   * })
+   * ```
+   * @category Hooks
+   */
+  onUpdate(hook: HookOnUpdate<T>) {
+
+    if (process.env.NODE_ENV === 'development') {
+      if (this._hookOnUpdate) {
+        console.warn(`Callback for hook "onUpdate" was specified more than once. This might be a bug in your code...`)
+      }
+    }
+
+    this._hookOnUpdate = hook;
+  }
+
+  /**
+   * The **onDelete**-hook runs when `delete` is called.
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
+   * ```typescript
+   * myModel.onDelete(() => {
+   *  // This runs before
+   *  return () => {
+   *    // This runs after
+   *  }
+   * })
+   * ```
+   * @category Hooks
+   */
+  onDelete(hook: HookOnDelete<T>) {
+
+    if (process.env.NODE_ENV === 'development') {
+      if (this._hookOnDelete) {
+        console.warn(`Callback for hook "onDelete" was specified more than once. This might be a bug in your code...`)
+      }
+    }
+
+    this._hookOnDelete = hook;
+  }
 
 
+ /**
+   * The **populate**-callback runs when `find`, `findOne` or `findById` are called with the specified property in the `populate`-options array.
+   * 
+   * @param property  The name of the property to populate.
+   * @param callback  A function that returns a value, or a Promise for a value, that will be populated on the specified property.
+   * 
+   * ```typescript
+   * myModel.populate('myParent', doc => {
+   *  return myModel.findById(doc.parent_id);
+   * })
+   * ```
+   * @category Hooks
+   */
   populate(property: string, callback: (doc: T) => Promise<any> | any) {
 
     if (process.env.NODE_ENV === 'development') {
@@ -186,7 +306,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnFind = this.onFind && this.onFind(filter, (newFilter) => {
+    const postOnFind = this._hookOnFind && this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
     })
 
@@ -206,7 +326,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnFind = this.onFind && this.onFind(filter, (newFilter) => {
+    const postOnFind = this._hookOnFind && this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
     })
 
@@ -230,7 +350,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     let filter = { _id: new ObjectId(id) } as Filter<T>
 
     // Call pre-hook
-    const postOnFind = this.onFind && this.onFind(filter, (newFilter) => {
+    const postOnFind = this._hookOnFind && this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
     })
 
@@ -250,15 +370,15 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnCrate = this.onCreate && this.onCreate(data, (newData) => { //TODO: Deep copy data!
+    const postOnCreate = this._hookOnCreate && this._hookOnCreate(data, (newData) => { //TODO: Deep copy data!
       data = newData;
     })
 
     let result = await col.insertOne(data)
 
     // Call post-hook
-    if (postOnCrate) {
-      result = await postOnCrate(result) || result;
+    if (postOnCreate) {
+      result = await postOnCreate(result) || result;
     }
 
     return result;
@@ -269,7 +389,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnUpdate = this.onUpdate && this.onUpdate(
+    const postOnUpdate = this._hookOnUpdate && this._hookOnUpdate(
       filter, (newFilter) => {
         filter = newFilter;
       },
@@ -293,7 +413,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnDelete = this.onDelete && this.onDelete(filter, (newFilter) => {
+    const postOnDelete = this._hookOnDelete && this._hookOnDelete(filter, (newFilter) => {
       filter = newFilter;
     })
 
