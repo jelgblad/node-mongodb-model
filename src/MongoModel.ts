@@ -46,9 +46,13 @@ export class MongoModel<T extends OptionalId<Document>> {
   // readonly schema?: IMongoJSONSchema
   // readonly indexDefinitions?: IndexDefinition[]
 
+  /** @ignore */
   private isCollectionReady = false;
+
+  /** @ignore */
   private collectionReadyCallbacks: (() => void)[] = []
 
+  /** @ignore */
   private populateCallbacks: {
     [property: string]: ((doc: any) => Promise<any>)
   } = {}
@@ -80,6 +84,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     })
   }
 
+  /** @ignore */
   private async prepareCollection(options?: IModelOptions) {
 
     const db = await this.db()
@@ -159,9 +164,16 @@ export class MongoModel<T extends OptionalId<Document>> {
    * Hooks
    */
 
+  /** @ignore */
   private _hookOnFind: HookOnFind<T> = undefined;
+
+  /** @ignore */
   private _hookOnCreate: HookOnCreate<T> = undefined;
+
+  /** @ignore */
   private _hookOnUpdate: HookOnUpdate<T> = undefined;
+
+  /** @ignore */
   private _hookOnDelete: HookOnDelete<T> = undefined;
 
   /**
@@ -269,19 +281,19 @@ export class MongoModel<T extends OptionalId<Document>> {
   }
 
 
- /**
-   * The **populate**-callback runs when `find`, `findOne` or `findById` are called with the specified property in the `populate`-options array.
-   * 
-   * @param property  The name of the property to populate.
-   * @param callback  A function that returns a value, or a Promise for a value, that will be populated on the specified property.
-   * 
-   * ```typescript
-   * myModel.populate('myParent', doc => {
-   *  return myModel.findById(doc.parent_id);
-   * })
-   * ```
-   * @category Hooks
-   */
+  /**
+    * The **populate**-callback runs when `find`, `findOne` or `findById` are called with the specified property in the `populate`-options array.
+    * 
+    * @param property  The name of the property to populate.
+    * @param callback  A function that returns a value, or a Promise for a value, that will be populated on the specified property.
+    * 
+    * ```typescript
+    * myModel.populate('myParent', doc => {
+    *  return myModel.findById(doc.parent_id);
+    * })
+    * ```
+    * @category Hooks
+    */
   populate(property: string, callback: (doc: T) => Promise<any> | any) {
 
     if (process.env.NODE_ENV === 'development') {
@@ -294,6 +306,9 @@ export class MongoModel<T extends OptionalId<Document>> {
   }
 
 
+  /**
+   * @category Queries
+   */
   exists(filter?: Filter<T>): Promise<boolean> {
 
     return this.collection()
@@ -301,6 +316,9 @@ export class MongoModel<T extends OptionalId<Document>> {
       .then(count => count === 1)
   }
 
+  /**
+   * @category Queries
+   */
   async find(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T[]> {
 
     const col = await this.collection()
@@ -321,6 +339,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     return data;
   }
 
+  /**
+   * @category Queries
+   */
   async findOne(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
 
     const col = await this.collection()
@@ -344,6 +365,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     //   .then(x => x.length > 0 ? x[0] : null) // TODO: throw error, like findFyId??
   }
 
+  /**
+   * @category Queries
+   */
   async findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
 
     const col = await this.collection()
@@ -365,6 +389,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     return data;
   }
 
+  /**
+   * @category Queries
+   */
   async create(data: Partial<T>) {
 
     const col = await this.collection()
@@ -384,6 +411,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     return result;
   }
 
+  /**
+   * @category Queries
+   */
   async update(filter: Filter<Document>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
 
     const col = await this.collection()
@@ -408,6 +438,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     return result;
   }
 
+  /**
+   * @category Queries
+   */
   async delete(filter?: Filter<T>, options?: FindOptions<T>) {
 
     const col = await this.collection()
@@ -436,6 +469,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     return result;
   }
 
+  /** @ignore */
   private async _populateAll(doc: any, properties: string[]) {
 
     if (!doc) return;
@@ -451,6 +485,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     return newDoc
   }
 
+  /** @ignore */
   private async _populate(doc: any, property: string) {
 
     if (!this.populateCallbacks[property]) {
