@@ -32,10 +32,10 @@ export interface IModelOptions {
   }
 }
 
-type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((doc: T) => Promise<T> | T | void) | void;
-type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => ((result: InsertOneResult<T>) => Promise<InsertOneResult<T>> | InsertOneResult<T> | void) | void;
-type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => ((result: UpdateResult) => Promise<UpdateResult> | UpdateResult | void) | void;
-type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((result: DeleteResult) => Promise<DeleteResult> | DeleteResult | void) | void;
+type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((doc: T) => Promise<T> | T | Promise<void> | void) | void;
+type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => ((result: InsertOneResult<T>) => Promise<InsertOneResult<T>> | InsertOneResult<T> | Promise<void> | void) | void;
+type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => ((result: UpdateResult) => Promise<UpdateResult> | UpdateResult | Promise<void> | void) | void;
+type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((result: DeleteResult) => Promise<DeleteResult> | DeleteResult | Promise<void> | void) | void;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
