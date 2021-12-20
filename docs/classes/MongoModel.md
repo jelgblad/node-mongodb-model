@@ -63,7 +63,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:60](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L60)
+[src/MongoModel.ts:60](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L60)
 
 ## Properties
 
@@ -73,7 +73,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:45](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L45)
+[src/MongoModel.ts:45](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L45)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:44](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L44)
+[src/MongoModel.ts:44](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L44)
 
 ## Hooks Methods
 
@@ -101,11 +101,20 @@ ___
 
 The **onCreate**-hook runs when `create` is called.
 
+```typescript
+myModel.onCreate(() => {
+ // This runs before
+ return () => {
+   // This runs after
+ }
+})
+```
+
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | `HookOnCreate`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.  ```typescript myModel.onCreate(() => {  // This runs before  return () => {    // This runs after  } }) ``` |
+| `hook` | `HookOnCreate`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -113,7 +122,7 @@ The **onCreate**-hook runs when `create` is called.
 
 #### Defined in
 
-[src/MongoModel.ts:220](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L220)
+[src/MongoModel.ts:222](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L222)
 
 ___
 
@@ -123,11 +132,20 @@ ___
 
 The **onDelete**-hook runs when `delete` is called.
 
+```typescript
+myModel.onDelete(() => {
+ // This runs before
+ return () => {
+   // This runs after
+ }
+})
+```
+
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | `HookOnDelete`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.  ```typescript myModel.onDelete(() => {  // This runs before  return () => {    // This runs after  } }) ``` |
+| `hook` | `HookOnDelete`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -135,7 +153,7 @@ The **onDelete**-hook runs when `delete` is called.
 
 #### Defined in
 
-[src/MongoModel.ts:272](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L272)
+[src/MongoModel.ts:276](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L276)
 
 ___
 
@@ -145,11 +163,20 @@ ___
 
 The **onFind**-hook runs when `find`, `findOne` or `findById` are called.
 
+```typescript
+myModel.onFind(() => {
+ // This runs before
+ return () => {
+   // This runs after
+ }
+})
+```
+
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | `HookOnFind`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.  ```typescript myModel.onFind(() => {  // This runs before  return () => {    // This runs after  } }) ``` |
+| `hook` | `HookOnFind`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -157,7 +184,7 @@ The **onFind**-hook runs when `find`, `findOne` or `findById` are called.
 
 #### Defined in
 
-[src/MongoModel.ts:194](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L194)
+[src/MongoModel.ts:195](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L195)
 
 ___
 
@@ -167,11 +194,20 @@ ___
 
 The **onUpdate**-hook runs when `update` is called.
 
+```typescript
+myModel.onUpdate(() => {
+ // This runs before
+ return () => {
+   // This runs after
+ }
+})
+```
+
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | `HookOnUpdate`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.  ```typescript myModel.onUpdate(() => {  // This runs before  return () => {    // This runs after  } }) ``` |
+| `hook` | `HookOnUpdate`<`T`\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -179,7 +215,7 @@ The **onUpdate**-hook runs when `update` is called.
 
 #### Defined in
 
-[src/MongoModel.ts:246](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L246)
+[src/MongoModel.ts:249](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L249)
 
 ___
 
@@ -189,12 +225,18 @@ ___
 
 The **populate**-callback runs when `find`, `findOne` or `findById` are called with the specified property in the `populate`-options array.
 
+```typescript
+myModel.populate('myParent', doc => {
+ return myModel.findById(doc.parent_id);
+})
+```
+
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `property` | `string` | The name of the property to populate. |
-| `callback` | (`doc`: `T`) => `any` | A function that returns a value, or a Promise for a value, that will be populated on the specified property.  ```typescript myModel.populate('myParent', doc => {  return myModel.findById(doc.parent_id); }) ``` |
+| `callback` | (`doc`: `T`) => `any` | A function that returns a value, or a Promise for a value, that will be populated on the specified property. |
 
 #### Returns
 
@@ -202,7 +244,7 @@ The **populate**-callback runs when `find`, `findOne` or `findById` are called w
 
 #### Defined in
 
-[src/MongoModel.ts:297](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L297)
+[src/MongoModel.ts:302](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L302)
 
 ___
 
@@ -218,7 +260,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:69](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L69)
+[src/MongoModel.ts:69](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L69)
 
 ___
 
@@ -240,7 +282,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:395](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L395)
+[src/MongoModel.ts:400](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L400)
 
 ___
 
@@ -261,7 +303,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:444](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L444)
+[src/MongoModel.ts:449](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L449)
 
 ___
 
@@ -281,7 +323,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:312](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L312)
+[src/MongoModel.ts:317](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L317)
 
 ___
 
@@ -303,7 +345,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:322](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L322)
+[src/MongoModel.ts:327](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L327)
 
 ___
 
@@ -325,7 +367,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:371](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L371)
+[src/MongoModel.ts:376](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L376)
 
 ___
 
@@ -347,7 +389,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:345](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L345)
+[src/MongoModel.ts:350](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L350)
 
 ___
 
@@ -369,4 +411,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:417](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L417)
+[src/MongoModel.ts:422](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L422)

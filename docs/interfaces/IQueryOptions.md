@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[src/MongoModel.ts:21](https://github.com/jelgblad/node-mongodb-model/blob/a921d83/src/MongoModel.ts#L21)
+[src/MongoModel.ts:21](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L21)

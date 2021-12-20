@@ -179,8 +179,6 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * The **onFind**-hook runs when `find`, `findOne` or `findById` are called.
    * 
-   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
-   * 
    * ```typescript
    * myModel.onFind(() => {
    *  // This runs before
@@ -189,6 +187,9 @@ export class MongoModel<T extends OptionalId<Document>> {
    *  }
    * })
    * ```
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
    * @category Hooks
    */
   onFind(hook: HookOnFind<T>) {
@@ -204,9 +205,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
   /**
    * The **onCreate**-hook runs when `create` is called.
-   * 
-   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
-   * 
+   *
    * ```typescript
    * myModel.onCreate(() => {
    *  // This runs before
@@ -214,7 +213,10 @@ export class MongoModel<T extends OptionalId<Document>> {
    *    // This runs after
    *  }
    * })
-   * ```
+   * ``` 
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
    * @category Hooks
    */
   onCreate(hook: HookOnCreate<T>) {
@@ -231,8 +233,6 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * The **onUpdate**-hook runs when `update` is called.
    * 
-   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
-   * 
    * ```typescript
    * myModel.onUpdate(() => {
    *  // This runs before
@@ -241,6 +241,9 @@ export class MongoModel<T extends OptionalId<Document>> {
    *  }
    * })
    * ```
+   * 
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
    * @category Hooks
    */
   onUpdate(hook: HookOnUpdate<T>) {
@@ -256,9 +259,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
   /**
    * The **onDelete**-hook runs when `delete` is called.
-   * 
-   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
-   * 
+   *
    * ```typescript
    * myModel.onDelete(() => {
    *  // This runs before
@@ -267,6 +268,9 @@ export class MongoModel<T extends OptionalId<Document>> {
    *  }
    * })
    * ```
+   *  
+   * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
+   * 
    * @category Hooks
    */
   onDelete(hook: HookOnDelete<T>) {
@@ -284,14 +288,15 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
     * The **populate**-callback runs when `find`, `findOne` or `findById` are called with the specified property in the `populate`-options array.
     * 
-    * @param property  The name of the property to populate.
-    * @param callback  A function that returns a value, or a Promise for a value, that will be populated on the specified property.
-    * 
     * ```typescript
     * myModel.populate('myParent', doc => {
     *  return myModel.findById(doc.parent_id);
     * })
     * ```
+    * 
+    * @param property  The name of the property to populate.
+    * @param callback  A function that returns a value, or a Promise for a value, that will be populated on the specified property.
+    * 
     * @category Hooks
     */
   populate(property: string, callback: (doc: T) => Promise<any> | any) {
