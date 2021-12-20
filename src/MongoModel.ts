@@ -32,10 +32,12 @@ export interface IModelOptions {
   }
 }
 
-type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((doc: T) => Promise<T> | T | void) | void;
-type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => ((result: InsertOneResult<T>) => Promise<InsertOneResult<T>> | InsertOneResult<T> | Promise<void> | void) | void;
-type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => ((result: UpdateResult) => Promise<UpdateResult> | UpdateResult | Promise<void> | void) | void;
-type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => ((result: DeleteResult) => Promise<DeleteResult> | DeleteResult | Promise<void> | void) | void;
+type MaybePromise<T> = Promise<T> | T;
+
+type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
+type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
+type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
+type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
@@ -329,7 +331,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && this._hookOnFind(filter, (newFilter) => {
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
     })
 
@@ -338,7 +340,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     // Call post-hook
     if (postOnFind) {
-      data = await Promise.all(data.map(d => postOnFind(d) || d))
+      data = await Promise.all(data.map(async d => await postOnFind(d) || d))
     }
 
     return data;
@@ -352,7 +354,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && this._hookOnFind(filter, (newFilter) => {
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
     })
 
@@ -379,7 +381,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     let filter = { _id: new ObjectId(id) } as Filter<T>
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && this._hookOnFind(filter, (newFilter) => {
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
     })
 
@@ -402,7 +404,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnCreate = this._hookOnCreate && this._hookOnCreate(data, (newData) => { //TODO: Deep copy data!
+    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, (newData) => { //TODO: Deep copy data!
       data = newData;
     })
 
@@ -424,7 +426,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnUpdate = this._hookOnUpdate && this._hookOnUpdate(
+    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(
       filter, (newFilter) => {
         filter = newFilter;
       },
@@ -451,7 +453,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnDelete = this._hookOnDelete && this._hookOnDelete(filter, (newFilter) => {
+    const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, (newFilter) => {
       filter = newFilter;
     })
 
