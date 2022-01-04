@@ -421,7 +421,7 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async update(filter: Filter<Document>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
+  async update(filter: Filter<T>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
 
     const col = await this.collection()
 
