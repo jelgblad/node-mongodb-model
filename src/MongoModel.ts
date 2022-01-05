@@ -349,7 +349,7 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async findOne(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
+  async findOne(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<void | T> {
 
     const col = await this.collection()
 
@@ -359,6 +359,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     })
 
     let data = await col.findOne(filter, options) as T
+
+    if (!data) return null
+
     data = await this._populateAll(data, queryOptions?.populate || [])
 
     // Call post-hook
@@ -375,7 +378,7 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T> {
+  async findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<void | T> {
 
     const col = await this.collection()
     let filter = { _id: new ObjectId(id) } as Filter<T>
@@ -386,6 +389,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     })
 
     let data = await col.findOne(filter, options) as T
+
+    if (!data) return null
+
     data = await this._populateAll(data, queryOptions?.populate || [])
 
     // Call post-hook
