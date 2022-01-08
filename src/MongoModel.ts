@@ -19,6 +19,7 @@ import { IMongoJSONSchema } from './IMongoJSONSchema'
 
 export interface IQueryOptions {
   populate?: string[]
+  hookArgs?: any
 }
 
 export interface IModelOptions {
@@ -34,7 +35,7 @@ export interface IModelOptions {
 
 type MaybePromise<T> = Promise<T> | T;
 
-type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
+type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
 type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
 type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
 type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
@@ -333,7 +334,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     // Call pre-hook
     const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
-    })
+    }, queryOptions?.hookArgs)
 
     let data = await col.find(filter, options).toArray() as T[]
     data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])))
@@ -356,7 +357,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     // Call pre-hook
     const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
-    })
+    }, queryOptions?.hookArgs)
 
     let data = await col.findOne(filter, options) as T
 
@@ -386,7 +387,7 @@ export class MongoModel<T extends OptionalId<Document>> {
     // Call pre-hook
     const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
       filter = newFilter;
-    })
+    }, queryOptions?.hookArgs)
 
     let data = await col.findOne(filter, options) as T
 
