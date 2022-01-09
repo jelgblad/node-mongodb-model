@@ -37,12 +37,12 @@ type MaybePromise<T> = Promise<T> | T;
 
 type HookOnFind<T> = (filter: Filter<T>, args: any) => MaybePromise<((doc: T) => MaybePromise<void>) | void>;
 // type HookOnFindIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
-type HookOnCreate<T> = (data: Partial<T>) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<void>> | MaybePromise<void>) | void>;
-// type HookOnCreateIM<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
-type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>) => MaybePromise<((result: UpdateResult) => MaybePromise<void>) | void>;
-// type HookOnUpdateIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
-type HookOnDelete<T> = (filter: Filter<T>) => MaybePromise<((result: DeleteResult) => MaybePromise<void>) | void>;
-// type HookOnDeleteIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
+type HookOnCreate<T> = (data: Partial<T>, args: any) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<void>> | MaybePromise<void>) | void>;
+// type HookOnCreateIM<T> = (data: Partial<T>, setData: (data: Partial<T>) => void, args: any) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
+type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) => MaybePromise<((result: UpdateResult) => MaybePromise<void>) | void>;
+// type HookOnUpdateIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void, args: any) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
+type HookOnDelete<T> = (filter: Filter<T>, args: any) => MaybePromise<((result: DeleteResult) => MaybePromise<void>) | void>;
+// type HookOnDeleteIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
@@ -413,12 +413,12 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async create(data: Partial<T>) {
+  async create(data: Partial<T>, queryOptions?: IQueryOptions) {
 
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data)
+    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, queryOptions?.hookArgs)
     // const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, (newData) => {
     //   data = newData;
     // }) // immutable version
@@ -439,12 +439,12 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async update(filter: Filter<T>, updateFilter: UpdateFilter<T>, options?: UpdateOptions) {
+  async update(filter: Filter<T>, updateFilter: UpdateFilter<T>, options?: UpdateOptions, queryOptions?: IQueryOptions) {
 
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(filter, updateFilter)
+    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(filter, updateFilter, queryOptions?.hookArgs)
     // const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(
     //   filter, (newFilter) => {
     //     filter = newFilter;
@@ -468,12 +468,12 @@ export class MongoModel<T extends OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async delete(filter?: Filter<T>, options?: FindOptions<T>) {
+  async delete(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions) {
 
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter);
+    const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, queryOptions?.hookArgs);
     // const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, (newFilter) => {
     //   filter = newFilter;
     // }) // immutable version
