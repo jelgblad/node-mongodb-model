@@ -15,6 +15,7 @@ import {
   UpdateOptions,
   UpdateResult
 } from 'mongodb';
+import { serialize, deserialize } from 'v8';
 import { IMongoJSONSchema } from './IMongoJSONSchema';
 
 export interface IQueryOptions {
@@ -46,7 +47,7 @@ type HookOnDelete<T> = (filter: Filter<T>, args: any) => MaybePromise<((result: 
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
-export class MongoModel<T extends OptionalId<Document>> {
+export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
 
   readonly db: () => Promise<Db>
   readonly collectionName: string
@@ -154,7 +155,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     // Set isCollectionReady-flag
     this.isCollectionReady = true;
 
-    console.log(`Collection "${this.collectionName}" ready.`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Collection "${this.collectionName}" ready.`);
+    }
 
     // Execute callbacks
     this.collectionReadyCallbacks.forEach(cb => cb());
@@ -508,7 +511,9 @@ export class MongoModel<T extends OptionalId<Document>> {
     const newDoc = Object.assign({}, doc);
 
     properties.forEach((value, i) => {
-      newDoc[value] = populatedProps[i];
+      if (populatedProps[i]) {
+        newDoc[value] = populatedProps[i];
+      }
     });
 
     return newDoc;
@@ -517,16 +522,18 @@ export class MongoModel<T extends OptionalId<Document>> {
   /** @ignore */
   private async _populate(doc: any, property: string) {
 
-    if (!this.populateCallbacks[property]) {
+    if (this.populateCallbacks[property]) {
 
+      // Deep-clone document before passing it to callback
+      const docClone = deserialize(serialize(doc));
+
+      // Call populate callback for property
+      return this.populateCallbacks[property](docClone);
+    }
+    else {
       if (process.env.NODE_ENV === 'development') {
         console.log(`No populate-handler for "${property}"`);
       }
-
-      return doc[property];
     }
-
-    // Call populate callback for property
-    return this.populateCallbacks[property](doc);
   }
 }
