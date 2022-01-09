@@ -15,7 +15,7 @@ import {
   UpdateOptions,
   UpdateResult
 } from 'mongodb';
-import { serialize, deserialize } from 'v8';
+import { deserialize, serialize } from 'BSON';
 import { IMongoJSONSchema } from './IMongoJSONSchema';
 
 export interface IQueryOptions {
