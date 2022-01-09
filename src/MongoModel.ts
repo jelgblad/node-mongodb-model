@@ -35,10 +35,14 @@ export interface IModelOptions {
 
 type MaybePromise<T> = Promise<T> | T;
 
-type HookOnFind<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
-type HookOnCreate<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
-type HookOnUpdate<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
-type HookOnDelete<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
+type HookOnFind<T> = (filter: Filter<T>, args: any) => MaybePromise<((doc: T) => MaybePromise<void>) | void>;
+// type HookOnFindIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
+type HookOnCreate<T> = (data: Partial<T>) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<void>> | MaybePromise<void>) | void>;
+// type HookOnCreateIM<T> = (data: Partial<T>, setData: (data: Partial<T>) => void) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
+type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>) => MaybePromise<((result: UpdateResult) => MaybePromise<void>) | void>;
+// type HookOnUpdateIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
+type HookOnDelete<T> = (filter: Filter<T>) => MaybePromise<((result: DeleteResult) => MaybePromise<void>) | void>;
+// type HookOnDeleteIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
@@ -332,16 +336,18 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
-      filter = newFilter;
-    }, queryOptions?.hookArgs)
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs)
+    // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
+    //   filter = newFilter;
+    // }, queryOptions?.hookArgs) // immutable version
 
     let data = await col.find(filter, options).toArray() as T[]
     data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])))
 
     // Call post-hook
     if (postOnFind) {
-      data = await Promise.all(data.map(async d => await postOnFind(d) || d))
+      await Promise.all(data.map(async d => await postOnFind(d)))
+      // data = await Promise.all(data.map(async d => await postOnFind(d) || d)) // immutable version
     }
 
     return data;
@@ -355,9 +361,10 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
-      filter = newFilter;
-    }, queryOptions?.hookArgs)
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs)
+    // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
+    //   filter = newFilter;
+    // }, queryOptions?.hookArgs) // immutable version
 
     let data = await col.findOne(filter, options) as T
 
@@ -367,13 +374,11 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     // Call post-hook
     if (postOnFind) {
-      data = await postOnFind(data) || data;
+      await postOnFind(data);
+      // data = await postOnFind(data) || data; // immutable version
     }
 
     return data;
-
-    // return this.find(query, options, queryOptions)
-    //   .then(x => x.length > 0 ? x[0] : null) // TODO: throw error, like findFyId??
   }
 
   /**
@@ -385,9 +390,10 @@ export class MongoModel<T extends OptionalId<Document>> {
     let filter = { _id: new ObjectId(id) } as Filter<T>
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
-      filter = newFilter;
-    }, queryOptions?.hookArgs)
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs)
+    // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
+    //   filter = newFilter;
+    // }, queryOptions?.hookArgs) // immutable version
 
     let data = await col.findOne(filter, options) as T
 
@@ -397,7 +403,8 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     // Call post-hook
     if (postOnFind) {
-      data = await postOnFind(data) || data;
+      await postOnFind(data);
+      // data = await postOnFind(data) || data; // immutable version
     }
 
     return data;
@@ -411,16 +418,20 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, (newData) => { //TODO: Deep copy data!
-      data = newData;
-    })
+    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data)
+    // const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, (newData) => {
+    //   data = newData;
+    // }) // immutable version
 
     let result = await col.insertOne(data)
 
     // Call post-hook
     if (postOnCreate) {
-      result = await postOnCreate(result) || result;
+      await postOnCreate(result);
     }
+    // if (postOnCreate) {
+    //   result = await postOnCreate(result) || result;
+    // } // immutable version
 
     return result;
   }
@@ -433,20 +444,22 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(
-      filter, (newFilter) => {
-        filter = newFilter;
-      },
-      updateFilter, (newUpdateFilter) => {
-        updateFilter = newUpdateFilter;
-      }
-    );
+    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(filter, updateFilter)
+    // const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(
+    //   filter, (newFilter) => {
+    //     filter = newFilter;
+    //   },
+    //   updateFilter, (newUpdateFilter) => {
+    //     updateFilter = newUpdateFilter;
+    //   }
+    // ); // immutable version
 
     let result = await col.updateMany(filter, updateFilter, options) as UpdateResult
 
     // Call post-hook
     if (postOnUpdate) {
-      result = await postOnUpdate(result) || result;
+      await postOnUpdate(result)
+      // result = await postOnUpdate(result) || result; // immutable version
     }
 
     return result;
@@ -460,9 +473,10 @@ export class MongoModel<T extends OptionalId<Document>> {
     const col = await this.collection()
 
     // Call pre-hook
-    const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, (newFilter) => {
-      filter = newFilter;
-    })
+    const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter);
+    // const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, (newFilter) => {
+    //   filter = newFilter;
+    // }) // immutable version
 
     // const documents = await this.find(query)
     // const documents = await col.find(filter, options).toArray() as T[]
@@ -477,7 +491,8 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     // Call post-hook
     if (postOnDelete) {
-      result = await postOnDelete(result) || result;
+      await postOnDelete(result)
+      // result = await postOnDelete(result) || result; // immutable version
     }
 
     return result;
