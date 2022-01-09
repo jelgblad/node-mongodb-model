@@ -1,2 +1,2 @@
-export * from './MongoModel'
-export * from './IMongoJSONSchema'
+export * from './MongoModel';
+export * from './IMongoJSONSchema';

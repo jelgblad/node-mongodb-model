@@ -1,21 +1,21 @@
 import {
+  Collection,
+  CreateIndexesOptions,
+  Db,
+  DeleteResult,
+  Document,
   Filter,
   FindOptions,
-  ObjectId,
-  Document,
-  OptionalId,
   IndexSpecification,
-  CreateIndexesOptions,
-  UpdateOptions,
-  UpdateFilter,
   InsertOneResult,
-  UpdateResult,
-  DeleteResult,
+  ObjectId,
+  OptionalId,
   TimeSeriesCollectionOptions,
-  Db,
-  Collection
-} from 'mongodb'
-import { IMongoJSONSchema } from './IMongoJSONSchema'
+  UpdateFilter,
+  UpdateOptions,
+  UpdateResult
+} from 'mongodb';
+import { IMongoJSONSchema } from './IMongoJSONSchema';
 
 export interface IQueryOptions {
   populate?: string[]
@@ -65,12 +65,12 @@ export class MongoModel<T extends OptionalId<Document>> {
   } = {}
 
   constructor(db: () => Promise<Db>, collectionName: string, options?: IModelOptions) {
-    this.db = db
-    this.collectionName = collectionName
+    this.db = db;
+    this.collectionName = collectionName;
     // this.schema = options?.schema
     // this.indexDefinitions = options?.indices
 
-    this.prepareCollection(options)
+    this.prepareCollection(options);
   }
 
   collection() {
@@ -78,36 +78,36 @@ export class MongoModel<T extends OptionalId<Document>> {
 
       // Return immediately if ready
       if (this.isCollectionReady) {
-        return resolve(this.db().then(db => db.collection(this.collectionName)))
+        return resolve(this.db().then(db => db.collection(this.collectionName)));
       }
 
       // Define callback function
       const cb = () => {
         // Resolve promise
-        return resolve(this.db().then(db => db.collection(this.collectionName)))
-      }
+        return resolve(this.db().then(db => db.collection(this.collectionName)));
+      };
       // Add callback function
-      this.collectionReadyCallbacks.push(cb)
-    })
+      this.collectionReadyCallbacks.push(cb);
+    });
   }
 
   /** @ignore */
   private async prepareCollection(options?: IModelOptions) {
 
-    const db = await this.db()
+    const db = await this.db();
 
     const validator = {
       ...(options?.schema && { $jsonSchema: options.schema })
-    }
+    };
     const validationAction = options?.validationAction || undefined;
     const validationLevel = options?.validationLevel || undefined;
 
-    const collectionExists = await db.listCollections({ name: this.collectionName }).toArray().then(cols => cols.length > 0)
+    const collectionExists = await db.listCollections({ name: this.collectionName }).toArray().then(cols => cols.length > 0);
 
     if (!collectionExists) {
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Creating collection "${this.collectionName}"...`)
+        console.log(`Creating collection "${this.collectionName}"...`);
       }
 
       try {
@@ -117,10 +117,10 @@ export class MongoModel<T extends OptionalId<Document>> {
           ...(options?.schema && { validator }),
           ...(options?.timeseries && { timeseries: options?.timeseries.timeseries }),
           ...(options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: options?.timeseries.expireAfterSeconds }),
-        })
+        });
       }
       catch (err) {
-        console.error(err.message)
+        console.error(err.message);
       }
     }
     else {
@@ -128,42 +128,42 @@ export class MongoModel<T extends OptionalId<Document>> {
       if (options?.schema) {
 
         if (process.env.NODE_ENV === 'development') {
-          console.log(`Updating validator for collection "${this.collectionName}"...`)
+          console.log(`Updating validator for collection "${this.collectionName}"...`);
         }
 
         // Update validation
-        await db.command({ collMod: this.collectionName, validator })
-        await db.command({ collMod: this.collectionName, validationAction: validationAction })
-        await db.command({ collMod: this.collectionName, validationLevel: validationLevel })
+        await db.command({ collMod: this.collectionName, validator });
+        await db.command({ collMod: this.collectionName, validationAction: validationAction });
+        await db.command({ collMod: this.collectionName, validationLevel: validationLevel });
       }
     }
 
     if (options?.indices) {
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Updating indices for collection "${this.collectionName}"...`)
+        console.log(`Updating indices for collection "${this.collectionName}"...`);
       }
 
-      const col = db.collection(this.collectionName)
+      const col = db.collection(this.collectionName);
 
       options.indices.forEach(async def => {
-        await col.createIndex(def.indexSpec, def.options)
-      })
+        await col.createIndex(def.indexSpec, def.options);
+      });
     }
 
     // Set isCollectionReady-flag
     this.isCollectionReady = true;
 
-    console.log(`Collection "${this.collectionName}" ready.`)
+    console.log(`Collection "${this.collectionName}" ready.`);
 
     // Execute callbacks
-    this.collectionReadyCallbacks.forEach(cb => cb())
+    this.collectionReadyCallbacks.forEach(cb => cb());
 
     // Remove callbacks
     this.collectionReadyCallbacks.forEach(cb => {
       // Remove callback function
-      this.collectionReadyCallbacks.splice(this.collectionReadyCallbacks.indexOf(cb, 1))
-    })
+      this.collectionReadyCallbacks.splice(this.collectionReadyCallbacks.indexOf(cb, 1));
+    });
   }
 
 
@@ -203,7 +203,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (process.env.NODE_ENV === 'development') {
       if (this._hookOnFind) {
-        console.warn(`Callback for hook "onFind" was specified more than once. This might be a bug in your code...`)
+        console.warn(`Callback for hook "onFind" was specified more than once. This might be a bug in your code...`);
       }
     }
 
@@ -230,7 +230,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (process.env.NODE_ENV === 'development') {
       if (this._hookOnCreate) {
-        console.warn(`Callback for hook "onCreate" was specified more than once. This might be a bug in your code...`)
+        console.warn(`Callback for hook "onCreate" was specified more than once. This might be a bug in your code...`);
       }
     }
 
@@ -257,7 +257,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (process.env.NODE_ENV === 'development') {
       if (this._hookOnUpdate) {
-        console.warn(`Callback for hook "onUpdate" was specified more than once. This might be a bug in your code...`)
+        console.warn(`Callback for hook "onUpdate" was specified more than once. This might be a bug in your code...`);
       }
     }
 
@@ -284,7 +284,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (process.env.NODE_ENV === 'development') {
       if (this._hookOnDelete) {
-        console.warn(`Callback for hook "onDelete" was specified more than once. This might be a bug in your code...`)
+        console.warn(`Callback for hook "onDelete" was specified more than once. This might be a bug in your code...`);
       }
     }
 
@@ -310,7 +310,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (process.env.NODE_ENV === 'development') {
       if (this.populateCallbacks[property]) {
-        console.warn(`Populate-callback for property "${property}" on model "${this.collectionName}" was specified more than once. This might be a bug in your code...`)
+        console.warn(`Populate-callback for property "${property}" on model "${this.collectionName}" was specified more than once. This might be a bug in your code...`);
       }
     }
 
@@ -325,7 +325,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     return this.collection()
       .then(col => col.find(filter).limit(1).count())
-      .then(count => count === 1)
+      .then(count => count === 1);
   }
 
   /**
@@ -333,20 +333,20 @@ export class MongoModel<T extends OptionalId<Document>> {
    */
   async find(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T[]> {
 
-    const col = await this.collection()
+    const col = await this.collection();
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs)
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs);
     // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
     //   filter = newFilter;
     // }, queryOptions?.hookArgs) // immutable version
 
-    let data = await col.find(filter, options).toArray() as T[]
-    data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])))
+    let data = await col.find(filter, options).toArray() as T[];
+    data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])));
 
     // Call post-hook
     if (postOnFind) {
-      await Promise.all(data.map(async d => await postOnFind(d)))
+      await Promise.all(data.map(async d => await postOnFind(d)));
       // data = await Promise.all(data.map(async d => await postOnFind(d) || d)) // immutable version
     }
 
@@ -358,19 +358,19 @@ export class MongoModel<T extends OptionalId<Document>> {
    */
   async findOne(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<void | T> {
 
-    const col = await this.collection()
+    const col = await this.collection();
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs)
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs);
     // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
     //   filter = newFilter;
     // }, queryOptions?.hookArgs) // immutable version
 
-    let data = await col.findOne(filter, options) as T
+    let data = await col.findOne(filter, options) as T;
 
-    if (!data) return null
+    if (!data) return null;
 
-    data = await this._populateAll(data, queryOptions?.populate || [])
+    data = await this._populateAll(data, queryOptions?.populate || []);
 
     // Call post-hook
     if (postOnFind) {
@@ -386,20 +386,20 @@ export class MongoModel<T extends OptionalId<Document>> {
    */
   async findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<void | T> {
 
-    const col = await this.collection()
-    let filter = { _id: new ObjectId(id) } as Filter<T>
+    const col = await this.collection();
+    const filter = { _id: new ObjectId(id) } as Filter<T>;
 
     // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs)
+    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs);
     // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
     //   filter = newFilter;
     // }, queryOptions?.hookArgs) // immutable version
 
-    let data = await col.findOne(filter, options) as T
+    let data = await col.findOne(filter, options) as T;
 
-    if (!data) return null
+    if (!data) return null;
 
-    data = await this._populateAll(data, queryOptions?.populate || [])
+    data = await this._populateAll(data, queryOptions?.populate || []);
 
     // Call post-hook
     if (postOnFind) {
@@ -415,15 +415,15 @@ export class MongoModel<T extends OptionalId<Document>> {
    */
   async create(data: Partial<T>, queryOptions?: IQueryOptions) {
 
-    const col = await this.collection()
+    const col = await this.collection();
 
     // Call pre-hook
-    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, queryOptions?.hookArgs)
+    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, queryOptions?.hookArgs);
     // const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, (newData) => {
     //   data = newData;
     // }) // immutable version
 
-    let result = await col.insertOne(data)
+    const result = await col.insertOne(data);
 
     // Call post-hook
     if (postOnCreate) {
@@ -441,10 +441,10 @@ export class MongoModel<T extends OptionalId<Document>> {
    */
   async update(filter: Filter<T>, updateFilter: UpdateFilter<T>, options?: UpdateOptions, queryOptions?: IQueryOptions) {
 
-    const col = await this.collection()
+    const col = await this.collection();
 
     // Call pre-hook
-    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(filter, updateFilter, queryOptions?.hookArgs)
+    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(filter, updateFilter, queryOptions?.hookArgs);
     // const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(
     //   filter, (newFilter) => {
     //     filter = newFilter;
@@ -454,11 +454,11 @@ export class MongoModel<T extends OptionalId<Document>> {
     //   }
     // ); // immutable version
 
-    let result = await col.updateMany(filter, updateFilter, options) as UpdateResult
+    const result = await col.updateMany(filter, updateFilter, options) as UpdateResult;
 
     // Call post-hook
     if (postOnUpdate) {
-      await postOnUpdate(result)
+      await postOnUpdate(result);
       // result = await postOnUpdate(result) || result; // immutable version
     }
 
@@ -470,7 +470,7 @@ export class MongoModel<T extends OptionalId<Document>> {
    */
   async delete(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions) {
 
-    const col = await this.collection()
+    const col = await this.collection();
 
     // Call pre-hook
     const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, queryOptions?.hookArgs);
@@ -483,7 +483,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     // console.log(documents)
 
-    let result = await col.deleteMany(filter)
+    const result = await col.deleteMany(filter);
 
     // if (result.deletedCount < 1) {
     //   // throw new Error('not_found')
@@ -491,7 +491,7 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     // Call post-hook
     if (postOnDelete) {
-      await postOnDelete(result)
+      await postOnDelete(result);
       // result = await postOnDelete(result) || result; // immutable version
     }
 
@@ -503,15 +503,15 @@ export class MongoModel<T extends OptionalId<Document>> {
 
     if (!doc) return;
 
-    const populatedProps = await Promise.all(properties.map(prop => this._populate(doc, prop)))
+    const populatedProps = await Promise.all(properties.map(prop => this._populate(doc, prop)));
 
-    const newDoc = Object.assign({}, doc)
+    const newDoc = Object.assign({}, doc);
 
     properties.forEach((value, i) => {
-      newDoc[value] = populatedProps[i]
-    })
+      newDoc[value] = populatedProps[i];
+    });
 
-    return newDoc
+    return newDoc;
   }
 
   /** @ignore */
@@ -520,13 +520,13 @@ export class MongoModel<T extends OptionalId<Document>> {
     if (!this.populateCallbacks[property]) {
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`No populate-handler for "${property}"`)
+        console.log(`No populate-handler for "${property}"`);
       }
 
-      return doc[property]
+      return doc[property];
     }
 
     // Call populate callback for property
-    return this.populateCallbacks[property](doc)
+    return this.populateCallbacks[property](doc);
   }
 }

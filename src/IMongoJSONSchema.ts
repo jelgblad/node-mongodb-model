@@ -1,4 +1,4 @@
-import { JSONSchema7 } from 'json-schema'
+import { JSONSchema7 } from 'json-schema';
 
 // https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#omissions
 type OmittedTypes = '$ref' | '$schema' | 'default' | 'definitions' | 'format' | 'id'
