@@ -6,9 +6,20 @@
 
 ### Properties
 
+- [hookArgs](IQueryOptions.md#hookargs)
 - [populate](IQueryOptions.md#populate)
 
 ## Properties
+
+### hookArgs
+
+• `Optional` **hookArgs**: `any`
+
+#### Defined in
+
+[src/MongoModel.ts:23](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L23)
+
+___
 
 ### populate
 
@@ -16,4 +27,4 @@
 
 #### Defined in
 
-[src/MongoModel.ts:21](https://github.com/jelgblad/node-mongodb-model/blob/512c83c/src/MongoModel.ts#L21)
+[src/MongoModel.ts:22](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L22)
