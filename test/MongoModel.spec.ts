@@ -124,7 +124,9 @@ describe('MongoModel', () => {
 
     it('should mutate documents', async () => {
       model.onFind(f => doc => {
-        doc.prop1 = 'defined in post hook';
+        if (doc) {
+          doc.prop1 = 'defined in post hook';
+        }
       });
 
       const filter: mongodb.Filter<IModel> = {
