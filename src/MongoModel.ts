@@ -432,7 +432,21 @@ export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
     //   data = newData;
     // }) // immutable version
 
-    const result = await col.insertOne(data);
+    let result: InsertOneResult<Document> = null;
+
+    // eslint-disable-next-line no-useless-catch
+    try {
+      result = await col.insertOne(data);
+    }
+    catch (err) {
+
+      // Call post-hook
+      if (postOnCreate) {
+        await postOnCreate(null);
+      }
+
+      throw err;
+    }
 
     // Call post-hook
     if (postOnCreate) {
