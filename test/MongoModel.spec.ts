@@ -345,4 +345,91 @@ describe('MongoModel', () => {
     });
   });
 
+
+
+  describe('MongoModel.utils.trimObject()', () => {
+
+    let trimModel: MongoModel;
+
+    before(async () => {
+      trimModel = new MongoModel(getDb, 'trimCollection', {
+        schema: {
+          properties: {
+            a: { bsonType: 'string' },
+            b: { bsonType: 'string' },
+            c: {
+              bsonType: 'object',
+              properties: {
+                ca: { bsonType: 'string' }
+              },
+              additionalProperties: false
+            },
+            d: {
+              bsonType: 'object',
+              properties: {
+                da: { bsonType: 'string' }
+              },
+              additionalProperties: true
+            },
+            e: {
+              bsonType: 'object',
+              properties: {
+                ea: { bsonType: 'string' }
+              }
+            }
+          },
+          additionalProperties: false
+        }
+      });
+    });
+
+    it('should mutate object', async () => {
+      const obj = {
+        a: 'this is a',
+        b: 'this is b',
+        c: {
+          ca: 'this is ca',
+          cx: 'this is cx'
+        },
+        x: 'this is x'
+      };
+
+      trimModel.utils.trimObject(obj);
+
+      expect(obj).not.ownProperty('x');
+      expect(obj.c).ownProperty('ca');
+      expect(obj.c).not.ownProperty('cx');
+    });
+
+    it('should respect additionalProperties == false', async () => {
+      const obj = {
+        c: {
+          ca: 'this is ca',
+          cx: 'this is cx'
+        },
+        d: {
+          da: 'this is da',
+          dx: 'this is dx'
+        },
+        e: {
+          ea: 'this is ea',
+          ex: 'this is ex'
+        },
+        x: 'this is x'
+      };
+
+      trimModel.utils.trimObject(obj);
+
+      expect(obj.c).not.ownProperty('cx');
+      expect(obj.d).ownProperty('dx');
+      expect(obj.e).ownProperty('ex');
+    });
+
+    after(async () => {
+      await trimModel.delete({
+        ref: 'MongoModel.utils.trimObject()'
+      });
+    });
+  });
+
 });

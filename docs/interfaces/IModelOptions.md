@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:30](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L30)
+[src/MongoModel.ts:30](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L30)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:27](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L27)
+[src/MongoModel.ts:27](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L27)
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:31](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L31)
+[src/MongoModel.ts:31](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L31)
 
 ___
 
@@ -57,7 +57,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:28](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L28)
+[src/MongoModel.ts:28](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L28)
 
 ___
 
@@ -67,4 +67,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:29](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L29)
+[src/MongoModel.ts:29](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L29)

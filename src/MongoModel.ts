@@ -65,11 +65,17 @@ export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
     [property: string]: ((doc: any) => Promise<any>)
   } = {}
 
+  /** @ignore */
+  private _schema: IMongoJSONSchema;
+
+
   constructor(db: () => Promise<Db>, collectionName: string, options?: IModelOptions) {
     this.db = db;
     this.collectionName = collectionName;
     // this.schema = options?.schema
     // this.indexDefinitions = options?.indices
+
+    this._schema = options && options.schema;
 
     this.prepareCollection(options);
   }
@@ -533,6 +539,32 @@ export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
     else {
       if (process.env.NODE_ENV === 'development') {
         console.log(`No populate-handler for "${property}"`);
+      }
+    }
+  }
+
+  readonly utils = {
+    /**
+     * Delete properties on *obj* based on rules supplied in *IModelOptions.schema*.
+     *  
+     * @param obj  Object to trim.
+     * 
+     * @category Hooks
+     */
+    trimObject: (obj) => {
+      return this._trimObjectShallow(obj, this._schema);
+    }
+  }
+
+  private _trimObjectShallow(obj: any, schema: IMongoJSONSchema) {
+    if (schema.additionalProperties === false) {
+      for (const key in obj) {
+        if (!schema.properties || Object.keys(schema.properties).indexOf(key) < 0) {
+          delete obj[key];
+        }
+        else if (schema.properties && schema.properties[key] && typeof obj[key] === 'object') {
+          this._trimObjectShallow(obj[key], schema.properties[key] as IMongoJSONSchema);
+        }
       }
     }
   }

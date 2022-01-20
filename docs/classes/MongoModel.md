@@ -18,6 +18,7 @@
 
 - [collectionName](MongoModel.md#collectionname)
 - [db](MongoModel.md#db)
+- [utils](MongoModel.md#utils)
 
 ### Hooks Methods
 
@@ -29,6 +30,7 @@
 
 ### Other Methods
 
+- [\_trimObjectShallow](MongoModel.md#_trimobjectshallow)
 - [collection](MongoModel.md#collection)
 
 ### Queries Methods
@@ -63,7 +65,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:68](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L68)
+[src/MongoModel.ts:72](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L72)
 
 ## Properties
 
@@ -73,7 +75,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:53](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L53)
+[src/MongoModel.ts:53](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L53)
 
 ___
 
@@ -91,7 +93,23 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:52](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L52)
+[src/MongoModel.ts:52](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L52)
+
+___
+
+### utils
+
+• `Readonly` **utils**: `Object`
+
+#### Type declaration
+
+| Name | Type |
+| :------ | :------ |
+| `trimObject` | (`obj`: `any`) => `void` |
+
+#### Defined in
+
+[src/MongoModel.ts:546](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L546)
 
 ## Hooks Methods
 
@@ -122,7 +140,7 @@ myModel.onCreate(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:232](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L232)
+[src/MongoModel.ts:238](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L238)
 
 ___
 
@@ -153,7 +171,7 @@ myModel.onDelete(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:286](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L286)
+[src/MongoModel.ts:292](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L292)
 
 ___
 
@@ -184,7 +202,7 @@ myModel.onFind(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:205](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L205)
+[src/MongoModel.ts:211](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L211)
 
 ___
 
@@ -215,7 +233,7 @@ myModel.onUpdate(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:259](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L259)
+[src/MongoModel.ts:265](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L265)
 
 ___
 
@@ -244,11 +262,32 @@ myModel.populate('myParent', doc => {
 
 #### Defined in
 
-[src/MongoModel.ts:312](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L312)
+[src/MongoModel.ts:318](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L318)
 
 ___
 
 ## Other Methods
+
+### \_trimObjectShallow
+
+▸ `Private` **_trimObjectShallow**(`obj`, `schema`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `obj` | `any` |
+| `schema` | [`IMongoJSONSchema`](../interfaces/IMongoJSONSchema.md) |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[src/MongoModel.ts:559](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L559)
+
+___
 
 ### collection
 
@@ -260,7 +299,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:77](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L77)
+[src/MongoModel.ts:83](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L83)
 
 ___
 
@@ -283,7 +322,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:419](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L419)
+[src/MongoModel.ts:425](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L425)
 
 ___
 
@@ -305,7 +344,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:474](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L474)
+[src/MongoModel.ts:480](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L480)
 
 ___
 
@@ -325,7 +364,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:327](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L327)
+[src/MongoModel.ts:333](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L333)
 
 ___
 
@@ -347,7 +386,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:337](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L337)
+[src/MongoModel.ts:343](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L343)
 
 ___
 
@@ -369,7 +408,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:390](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L390)
+[src/MongoModel.ts:396](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L396)
 
 ___
 
@@ -391,7 +430,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:362](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L362)
+[src/MongoModel.ts:368](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L368)
 
 ___
 
@@ -414,4 +453,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:445](https://github.com/jelgblad/node-mongodb-model/blob/dac472f/src/MongoModel.ts#L445)
+[src/MongoModel.ts:451](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L451)
