@@ -24,6 +24,17 @@ describe('MongoModel', () => {
     it('should create a new MongoModel', () => {
       expect(model).to.instanceOf(MongoModel);
     });
+
+    const tmpModel = new MongoModel<{ _id: number, hello: string }>(getDb, 'tmpCollection');
+
+    it('should be able to change type on _id', async () => {
+      const result = await tmpModel.create({ _id: 1, hello: 'world' });
+      expect(result.insertedId).to.equal(1);
+    });
+
+    after(async () => {
+      await tmpModel.delete();
+    });
   });
 
 

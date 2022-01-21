@@ -38,7 +38,7 @@ type MaybePromise<T> = Promise<T> | T;
 
 type HookOnFind<T> = (filter: Filter<T>, args: any) => MaybePromise<((doc: T | void, err?: any) => MaybePromise<void>) | void>;
 // type HookOnFindIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
-type HookOnCreate<T> = (data: Partial<T>, args: any) => MaybePromise<((result: InsertOneResult<T> | void, err?: any) => MaybePromise<InsertOneResult<void>> | MaybePromise<void>) | void>;
+type HookOnCreate<T> = (data: OptionalId<T>, args: any) => MaybePromise<((result: InsertOneResult<T> | void, err?: any) => MaybePromise<InsertOneResult<void>> | MaybePromise<void>) | void>;
 // type HookOnCreateIM<T> = (data: Partial<T>, setData: (data: Partial<T>) => void, args: any) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
 type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) => MaybePromise<((result: UpdateResult | void, err?: any) => MaybePromise<void>) | void>;
 // type HookOnUpdateIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void, args: any) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
@@ -47,7 +47,7 @@ type HookOnDelete<T> = (filter: Filter<T>, args: any) => MaybePromise<((result: 
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
-export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
+export class MongoModel<T = unknown> {
 
   readonly db: () => Promise<Db>
   readonly collectionName: string
@@ -81,7 +81,7 @@ export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
   }
 
   collection() {
-    return new Promise<Collection>(resolve => {
+    return new Promise<Collection<T>>(resolve => {
 
       // Return immediately if ready
       if (this.isCollectionReady) {
@@ -458,7 +458,7 @@ export class MongoModel<T extends OptionalId<Document> = OptionalId<Document>> {
   /**
    * @category Queries
    */
-  async create(data: Partial<T>, queryOptions?: IQueryOptions) {
+  async create(data: OptionalId<T>, queryOptions?: IQueryOptions) {
 
     const col = await this.collection();
 
