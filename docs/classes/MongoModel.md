@@ -6,7 +6,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `T` | extends `OptionalId`<`Document`\> = `OptionalId`<`Document`\> |
+| `T` | `unknown` |
 
 ## Table of contents
 
@@ -53,7 +53,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `T` | extends `Document` & { `_id?`: `ObjectId`  } = `Document` & { `_id?`: `ObjectId`  } |
+| `T` | `unknown` |
 
 #### Parameters
 
@@ -65,7 +65,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:72](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L72)
+[src/MongoModel.ts:72](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L72)
 
 ## Properties
 
@@ -75,7 +75,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:53](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L53)
+[src/MongoModel.ts:53](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L53)
 
 ___
 
@@ -93,7 +93,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:52](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L52)
+[src/MongoModel.ts:52](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L52)
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:546](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L546)
+[src/MongoModel.ts:618](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L618)
 
 ## Hooks Methods
 
@@ -140,7 +140,7 @@ myModel.onCreate(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:238](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L238)
+[src/MongoModel.ts:238](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L238)
 
 ___
 
@@ -171,7 +171,7 @@ myModel.onDelete(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:292](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L292)
+[src/MongoModel.ts:292](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L292)
 
 ___
 
@@ -202,7 +202,7 @@ myModel.onFind(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:211](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L211)
+[src/MongoModel.ts:211](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L211)
 
 ___
 
@@ -233,7 +233,7 @@ myModel.onUpdate(() => {
 
 #### Defined in
 
-[src/MongoModel.ts:265](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L265)
+[src/MongoModel.ts:265](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L265)
 
 ___
 
@@ -262,7 +262,7 @@ myModel.populate('myParent', doc => {
 
 #### Defined in
 
-[src/MongoModel.ts:318](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L318)
+[src/MongoModel.ts:318](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L318)
 
 ___
 
@@ -285,21 +285,21 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:559](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L559)
+[src/MongoModel.ts:631](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L631)
 
 ___
 
 ### collection
 
-▸ **collection**(): `Promise`<`Collection`<`Document`\>\>
+▸ **collection**(): `Promise`<`Collection`<`T`\>\>
 
 #### Returns
 
-`Promise`<`Collection`<`Document`\>\>
+`Promise`<`Collection`<`T`\>\>
 
 #### Defined in
 
-[src/MongoModel.ts:83](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L83)
+[src/MongoModel.ts:83](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L83)
 
 ___
 
@@ -307,22 +307,22 @@ ___
 
 ### create
 
-▸ **create**(`data`, `queryOptions?`): `Promise`<`InsertOneResult`<`Document`\>\>
+▸ **create**(`data`, `queryOptions?`): `Promise`<`InsertOneResult`<`T`\>\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `data` | `Partial`<`T`\> |
+| `data` | `OptionalId`<`T`\> |
 | `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
 
 #### Returns
 
-`Promise`<`InsertOneResult`<`Document`\>\>
+`Promise`<`InsertOneResult`<`T`\>\>
 
 #### Defined in
 
-[src/MongoModel.ts:425](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L425)
+[src/MongoModel.ts:461](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L461)
 
 ___
 
@@ -344,7 +344,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:480](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L480)
+[src/MongoModel.ts:540](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L540)
 
 ___
 
@@ -364,7 +364,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:333](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L333)
+[src/MongoModel.ts:333](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L333)
 
 ___
 
@@ -386,7 +386,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:343](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L343)
+[src/MongoModel.ts:343](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L343)
 
 ___
 
@@ -408,7 +408,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:396](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L396)
+[src/MongoModel.ts:420](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L420)
 
 ___
 
@@ -430,7 +430,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:368](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L368)
+[src/MongoModel.ts:380](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L380)
 
 ___
 
@@ -453,4 +453,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:451](https://github.com/jelgblad/node-mongodb-model/blob/c5c3886/src/MongoModel.ts#L451)
+[src/MongoModel.ts:499](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L499)
