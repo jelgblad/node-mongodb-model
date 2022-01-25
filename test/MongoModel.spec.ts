@@ -8,19 +8,21 @@ interface IModel {
   ref: string
   prop1?: string
   prop2?: string
+  prop3?: string
+  prop4?: string
 }
 
 let model: MongoModel<IModel>;
 
 describe('MongoModel', () => {
 
-  before(async () => {
-    model = new MongoModel(getDb, 'myCollection');
-    await model.delete();
-  });
-
-
   describe('new MongoModel()', () => {
+
+    before(async () => {
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
+    });
+
     it('should create a new MongoModel', () => {
       expect(model).to.instanceOf(MongoModel);
     });
@@ -48,10 +50,27 @@ describe('MongoModel', () => {
 
   describe('MongoModel.onCreate()', () => {
 
-    it('should mutate insertData', async () => {
-      model.onCreate(d => {
+    before(async () => {
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
+    });
+
+    before(() => {
+      model.onCreate((d, args) => {
         d.prop1 = 'defined in pre hook';
+
+        // Attach hookArgs to data
+        d.prop2 = args;
+
+        return result => {
+          if (result) {
+            (result as any).prop1 = 'defined in post hook';
+          }
+        };
       });
+    });
+
+    it('should mutate insertData', async () => {
 
       const insertData: IModel = {
         ref: 'MongoModel.onCreate()'
@@ -67,9 +86,6 @@ describe('MongoModel', () => {
     });
 
     it('should mutate result', async () => {
-      model.onCreate(d => result => {
-        (result as any).prop1 = 'defined in post hook';
-      });
 
       const insertData: IModel = {
         ref: 'MongoModel.onCreate()'
@@ -81,10 +97,6 @@ describe('MongoModel', () => {
     });
 
     it('should pass hookArgs to hook', async () => {
-      model.onCreate((d, args) => {
-        // Attach hookArgs to data
-        d.prop2 = args;
-      });
 
       const insertData: IModel = {
         ref: 'MongoModel.onCreate()'
@@ -106,9 +118,29 @@ describe('MongoModel', () => {
   describe('MongoModel.onFind()', () => {
 
     before(async () => {
+
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
+
+      model.onFind((f, args) => {
+        f.prop1 = 'b';
+
+        // Attach hookArgs to filter
+        f.prop2 = args;
+
+        return doc => {
+          if (doc) {
+            doc.prop1 = 'defined in post hook';
+            doc.prop2 = 'b';
+          }
+        };
+      });
+
       await model.create({
         ref: 'MongoModel.onFind()',
-        prop1: 'a'
+        prop1: 'a',
+        prop3: 'c',
+        prop4: 'd'
       });
 
       await model.create({
@@ -118,9 +150,6 @@ describe('MongoModel', () => {
     });
 
     it('should mutate filter', async () => {
-      model.onFind(f => {
-        f.prop1 = 'b';
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onFind()'
@@ -130,15 +159,10 @@ describe('MongoModel', () => {
 
       expect(filter.prop1).to.equal('b');
       expect(docs).length(1);
-      expect(docs[0].prop1).to.equal('b');
+      expect(docs[0].prop2).to.equal('b');
     });
 
     it('should mutate documents', async () => {
-      model.onFind(f => doc => {
-        if (doc) {
-          doc.prop1 = 'defined in post hook';
-        }
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onFind()'
@@ -152,10 +176,6 @@ describe('MongoModel', () => {
     });
 
     it('should pass hookArgs to hook', async () => {
-      model.onFind((f, args) => {
-        // Attach hookArgs to filter
-        f.prop2 = args;
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onFind()'
@@ -165,6 +185,93 @@ describe('MongoModel', () => {
 
       expect(filter.prop2).to.eql({ arg1: 'value1' });
     });
+
+    it('should be able to add multiple hooks', async () => {
+
+      model.onFind(f => {
+        // f.prop3 = 'c';
+
+        return result => {
+          (result as any).prop1 = 'result hook 1';
+        };
+      });
+
+      model.onFind(f => {
+        // f.prop4 = 'd';
+
+        return result => {
+          (result as any).prop2 = 'result hook 2';
+        };
+      });
+
+      // model.onFind(() => {
+      //   console.log('1');
+      //   return () => {
+      //     console.log('A');
+      //   };
+      // });
+      // model.onFind(() => {
+      //   console.log('2');
+      //   return () => {
+      //     console.log('B');
+      //   };
+      // });
+      // model.onFind(async () => {
+
+      //   console.log('3a');
+
+      //   await new Promise(resolve => {
+      //     setTimeout(() => {
+      //       resolve(null);
+      //     }, 500);
+      //   });
+
+      //   console.log('3b');
+
+      //   return () => {
+      //     console.log('C');
+      //   };
+      // });
+      // model.onFind(() => {
+      //   console.log('4');
+      //   return async () => {
+      //     console.log('Da');
+
+      //     await new Promise(resolve => {
+      //       setTimeout(() => {
+      //         resolve(null);
+      //       }, 500);
+      //     });
+
+      //     console.log('Db');
+      //   };
+      // });
+      // model.onFind(() => {
+      //   console.log('5');
+      //   return () => {
+      //     console.log('E');
+      //   };
+      // });
+      // model.onFind(() => {
+      //   console.log('6');
+      //   return () => {
+      //     console.log('F');
+      //   };
+      // });
+
+
+      const filter: mongodb.Filter<IModel> = {
+        ref: 'MongoModel.onFind()'
+      };
+
+      const result = await model.find(filter);
+
+      // expect(filter.prop3).to.equal('c');
+      // expect(filter.prop4).to.equal('d');
+      expect(result[0].prop1).to.equal('result hook 1');
+      expect(result[0].prop2).to.equal('result hook 2');
+    });
+
 
     after(async () => {
       await model.delete({
@@ -177,15 +284,32 @@ describe('MongoModel', () => {
   describe('MongoModel.onUpdate()', () => {
 
     before(async () => {
+
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
+
+      model.onUpdate((f, uf, args) => {
+        f.prop1 = 'defined in pre hook';
+
+        // Attach hookArgs to filter
+        f.prop2 = args;
+
+        uf.$set = {
+          ...uf.$set,
+          prop2: 'defined in pre hook'
+        };
+
+        return (result: any) => {
+          result.prop1 = 'defined in post hook';
+        };
+      });
+
       await model.create({
         ref: 'MongoModel.onUpdate()'
       });
     });
 
     it('should mutate filter', async () => {
-      model.onUpdate((f, uf) => {
-        f.prop1 = 'defined in pre hook';
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onUpdate()'
@@ -201,12 +325,6 @@ describe('MongoModel', () => {
     });
 
     it('should mutate updateFilter', async () => {
-      model.onUpdate((f, uf) => {
-        uf.$set = {
-          ...uf.$set,
-          prop2: 'defined in pre hook'
-        };
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onUpdate()'
@@ -222,9 +340,6 @@ describe('MongoModel', () => {
     });
 
     it('should mutate result', async () => {
-      model.onUpdate((f, uf) => (result: any) => {
-        result.prop1 = 'defined in post hook';
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onUpdate()'
@@ -240,10 +355,6 @@ describe('MongoModel', () => {
     });
 
     it('should pass hookArgs to hook', async () => {
-      model.onUpdate((f, uf, args) => {
-        // Attach hookArgs to filter
-        f.prop2 = args;
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onUpdate()'
@@ -268,10 +379,23 @@ describe('MongoModel', () => {
 
   describe('MongoModel.onDelete()', () => {
 
-    it('should mutate filter', async () => {
-      model.onDelete(f => {
+    before(async () => {
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
+
+      model.onDelete((f, args) => {
         f.prop1 = 'defined in pre hook';
+
+        // Attach hookArgs to filter
+        f.prop2 = args;
+
+        return (result: any) => {
+          result.prop1 = 'defined in post hook';
+        };
       });
+    });
+
+    it('should mutate filter', async () => {
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onDelete()'
@@ -283,9 +407,6 @@ describe('MongoModel', () => {
     });
 
     it('should mutate result', async () => {
-      model.onDelete(f => (result: any) => {
-        result.prop1 = 'defined in post hook';
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onDelete()'
@@ -297,16 +418,12 @@ describe('MongoModel', () => {
     });
 
     it('should pass hookArgs to hook', async () => {
-      model.onDelete((f, args) => {
-        // Attach hookArgs to filter
-        f.prop2 = args;
-      });
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onDelete()'
       };
 
-      await model.find(filter, {}, { hookArgs: { arg1: 'value1' } });
+      await model.delete(filter, {}, { hookArgs: { arg1: 'value1' } });
 
       expect(filter.prop2).to.eql({ arg1: 'value1' });
     });
@@ -316,6 +433,9 @@ describe('MongoModel', () => {
   describe('MongoModel.populate()', () => {
 
     before(async () => {
+
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
 
       model.populate('prop2', d => {
         d.prop1 = 'mutated';
@@ -362,10 +482,12 @@ describe('MongoModel', () => {
 
   describe('MongoModel.utils.trimObject()', () => {
 
-    let trimModel: MongoModel;
-
     before(async () => {
-      trimModel = new MongoModel(getDb, 'trimCollection', {
+
+      model = new MongoModel(getDb, 'myCollection');
+      await model.delete();
+
+      model = new MongoModel(getDb, 'trimCollection', {
         schema: {
           properties: {
             a: { bsonType: 'string' },
@@ -407,7 +529,7 @@ describe('MongoModel', () => {
         x: 'this is x'
       };
 
-      trimModel.utils.trimObject(obj);
+      model.utils.trimObject(obj);
 
       expect(obj).not.ownProperty('x');
       expect(obj.c).ownProperty('ca');
@@ -431,7 +553,7 @@ describe('MongoModel', () => {
         x: 'this is x'
       };
 
-      trimModel.utils.trimObject(obj);
+      model.utils.trimObject(obj);
 
       expect(obj.c).not.ownProperty('cx');
       expect(obj.d).ownProperty('dx');
@@ -439,7 +561,7 @@ describe('MongoModel', () => {
     });
 
     after(async () => {
-      await trimModel.delete({
+      await model.delete({
         ref: 'MongoModel.utils.trimObject()'
       });
     });

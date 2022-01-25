@@ -33,4 +33,4 @@
 
 #### Defined in
 
-[src/MongoModel.ts:48](https://github.com/jelgblad/node-mongodb-model/blob/d753be9/src/MongoModel.ts#L48)
+[src/MongoModel.ts:54](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L54)

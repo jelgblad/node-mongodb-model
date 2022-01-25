@@ -1,6 +1,6 @@
-import { MongoClient } from 'mongodb';
-// import mongodb = require('mongo-mock');
-// const MongoClient = mongodb.MongoClient;
+// import { MongoClient } from 'mongodb';
+import mongodb = require('mongo-mock');
+const MongoClient = mongodb.MongoClient;
 
 const MONGODB_CONNECTION = 'mongodb://host.docker.internal/mongodb-model-test';
 

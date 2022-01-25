@@ -3,7 +3,6 @@ import {
   CreateIndexesOptions,
   Db,
   DeleteResult,
-  Document,
   Filter,
   FindOptions,
   IndexSpecification,
@@ -36,13 +35,20 @@ export interface IModelOptions {
 
 type MaybePromise<T> = Promise<T> | T;
 
-type HookOnFind<T> = (filter: Filter<T>, args: any) => MaybePromise<((doc: T | void, err?: any) => MaybePromise<void>) | void>;
+// Post-hooks
+type HookPostOnFind<T> = (doc: T | void, err?: any) => MaybePromise<void>;
+type HookPostOnCreate<T> = (result: InsertOneResult<T> | void, err?: any) => MaybePromise<void>;
+type HookPostOnUpdate = (result: UpdateResult | void, err?: any) => MaybePromise<void>;
+type HookPostOnDelete = (result: DeleteResult | void, err?: any) => MaybePromise<void>;
+
+// Pre-hooks
+type HookOnFind<T> = (filter: Filter<T>, args: any) => MaybePromise<HookPostOnFind<T> | void>;
 // type HookOnFindIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
-type HookOnCreate<T> = (data: OptionalId<T>, args: any) => MaybePromise<((result: InsertOneResult<T> | void, err?: any) => MaybePromise<InsertOneResult<void>> | MaybePromise<void>) | void>;
+type HookOnCreate<T> = (data: OptionalId<T>, args: any) => MaybePromise<HookPostOnCreate<T> | void>;
 // type HookOnCreateIM<T> = (data: Partial<T>, setData: (data: Partial<T>) => void, args: any) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
-type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) => MaybePromise<((result: UpdateResult | void, err?: any) => MaybePromise<void>) | void>;
+type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) => MaybePromise<HookPostOnUpdate | void>;
 // type HookOnUpdateIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void, args: any) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
-type HookOnDelete<T> = (filter: Filter<T>, args: any) => MaybePromise<((result: DeleteResult | void, err?: any) => MaybePromise<void>) | void>;
+type HookOnDelete<T> = (filter: Filter<T>, args: any) => MaybePromise<HookPostOnDelete | void>;
 // type HookOnDeleteIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
@@ -181,16 +187,16 @@ export class MongoModel<T = unknown> {
    */
 
   /** @ignore */
-  private _hookOnFind: HookOnFind<T> = undefined;
+  private _hooksOnFind: HookOnFind<T>[] = [];
 
   /** @ignore */
-  private _hookOnCreate: HookOnCreate<T> = undefined;
+  private _hooksOnCreate: HookOnCreate<T>[] = [];
 
   /** @ignore */
-  private _hookOnUpdate: HookOnUpdate<T> = undefined;
+  private _hooksOnUpdate: HookOnUpdate<T>[] = [];
 
   /** @ignore */
-  private _hookOnDelete: HookOnDelete<T> = undefined;
+  private _hooksOnDelete: HookOnDelete<T>[] = [];
 
   /**
    * The **onFind**-hook runs when `find`, `findOne` or `findById` are called.
@@ -204,19 +210,14 @@ export class MongoModel<T = unknown> {
    * })
    * ```
    * 
+   * Hooks runs in the order they are defined.
+   * 
    * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
    * 
    * @category Hooks
    */
   onFind(hook: HookOnFind<T>) {
-
-    if (process.env.NODE_ENV === 'development') {
-      if (this._hookOnFind) {
-        console.warn(`Callback for hook "onFind" was specified more than once. This might be a bug in your code...`);
-      }
-    }
-
-    this._hookOnFind = hook;
+    this._hooksOnFind.push(hook);
   }
 
   /**
@@ -231,19 +232,14 @@ export class MongoModel<T = unknown> {
    * })
    * ``` 
    * 
+   * Hooks runs in the order they are defined.
+   * 
    * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
    * 
    * @category Hooks
    */
   onCreate(hook: HookOnCreate<T>) {
-
-    if (process.env.NODE_ENV === 'development') {
-      if (this._hookOnCreate) {
-        console.warn(`Callback for hook "onCreate" was specified more than once. This might be a bug in your code...`);
-      }
-    }
-
-    this._hookOnCreate = hook;
+    this._hooksOnCreate.push(hook);
   }
 
   /**
@@ -258,19 +254,14 @@ export class MongoModel<T = unknown> {
    * })
    * ```
    * 
+   * Hooks runs in the order they are defined.
+   * 
    * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
    * 
    * @category Hooks
    */
   onUpdate(hook: HookOnUpdate<T>) {
-
-    if (process.env.NODE_ENV === 'development') {
-      if (this._hookOnUpdate) {
-        console.warn(`Callback for hook "onUpdate" was specified more than once. This might be a bug in your code...`);
-      }
-    }
-
-    this._hookOnUpdate = hook;
+    this._hooksOnUpdate.push(hook);
   }
 
   /**
@@ -285,19 +276,14 @@ export class MongoModel<T = unknown> {
    * })
    * ```
    *  
+   * Hooks runs in the order they are defined.
+   * 
    * @param hook  A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB.
    * 
    * @category Hooks
    */
   onDelete(hook: HookOnDelete<T>) {
-
-    if (process.env.NODE_ENV === 'development') {
-      if (this._hookOnDelete) {
-        console.warn(`Callback for hook "onDelete" was specified more than once. This might be a bug in your code...`);
-      }
-    }
-
-    this._hookOnDelete = hook;
+    this._hooksOnDelete.push(hook);
   }
 
 
@@ -344,20 +330,24 @@ export class MongoModel<T = unknown> {
 
     const col = await this.collection();
 
-    // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs);
-    // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
-    //   filter = newFilter;
-    // }, queryOptions?.hookArgs) // immutable version
+    // Call pre-hooks
+    const postOnFindHooks: HookPostOnFind<T>[] = [];
+    for (const hook of this._hooksOnFind) {
+      const postHook = await hook(filter, queryOptions?.hookArgs);
+      if (postHook) {
+        postOnFindHooks.push(postHook);
+      }
+    }
 
     try {
       let data = await col.find(filter, options).toArray() as T[];
       data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])));
 
-      // Call post-hook
-      if (postOnFind) {
-        await Promise.all(data.map(async d => await postOnFind(d)));
-        // data = await Promise.all(data.map(async d => await postOnFind(d) || d)) // immutable version
+      // Call post-hooks
+      for (const d of data) {
+        for (const hook of postOnFindHooks) {
+          await hook(d);
+        }
       }
 
       return data;
@@ -365,8 +355,8 @@ export class MongoModel<T = unknown> {
     catch (err) {
 
       // Call post-hook
-      if (postOnFind) {
-        await postOnFind(null, err);
+      for (const hook of postOnFindHooks) {
+        await hook(null, err);
       }
 
       // Throw error again
@@ -381,11 +371,14 @@ export class MongoModel<T = unknown> {
 
     const col = await this.collection();
 
-    // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs);
-    // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
-    //   filter = newFilter;
-    // }, queryOptions?.hookArgs) // immutable version
+    // Call pre-hooks
+    const postOnFindHooks: HookPostOnFind<T>[] = [];
+    for (const hook of this._hooksOnFind) {
+      const postHook = await hook(filter, queryOptions?.hookArgs);
+      if (postHook) {
+        postOnFindHooks.push(postHook);
+      }
+    }
 
     try {
       let data = await col.findOne(filter, options) as T;
@@ -394,19 +387,16 @@ export class MongoModel<T = unknown> {
 
       data = await this._populateAll(data, queryOptions?.populate || []);
 
-      // Call post-hook
-      if (postOnFind) {
-        await postOnFind(data);
-        // data = await postOnFind(data) || data; // immutable version
-      }
+      // Call post-hooks
+      await Promise.all(postOnFindHooks.map(hook => hook ? hook(data) : null));
 
       return data;
     }
     catch (err) {
 
       // Call post-hook
-      if (postOnFind) {
-        await postOnFind(null, err);
+      for (const hook of postOnFindHooks) {
+        await hook(null, err);
       }
 
       // Throw error again
@@ -422,11 +412,14 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
     const filter = { _id: new ObjectId(id) } as Filter<T>;
 
-    // Call pre-hook
-    const postOnFind = this._hookOnFind && await this._hookOnFind(filter, queryOptions?.hookArgs);
-    // const postOnFind = this._hookOnFind && await this._hookOnFind(filter, (newFilter) => {
-    //   filter = newFilter;
-    // }, queryOptions?.hookArgs) // immutable version
+    // Call pre-hooks
+    const postOnFindHooks: HookPostOnFind<T>[] = [];
+    for (const hook of this._hooksOnFind) {
+      const postHook = await hook(filter, queryOptions?.hookArgs);
+      if (postHook) {
+        postOnFindHooks.push(postHook);
+      }
+    }
 
     try {
       let data = await col.findOne(filter, options) as T;
@@ -435,19 +428,16 @@ export class MongoModel<T = unknown> {
 
       data = await this._populateAll(data, queryOptions?.populate || []);
 
-      // Call post-hook
-      if (postOnFind) {
-        await postOnFind(data);
-        // data = await postOnFind(data) || data; // immutable version
-      }
+      // Call post-hooks
+      await Promise.all(postOnFindHooks.map(hook => hook ? hook(data) : null));
 
       return data;
     }
     catch (err) {
 
       // Call post-hook
-      if (postOnFind) {
-        await postOnFind(null, err);
+      for (const hook of postOnFindHooks) {
+        await hook(null, err);
       }
 
       // Throw error again
@@ -462,30 +452,30 @@ export class MongoModel<T = unknown> {
 
     const col = await this.collection();
 
-    // Call pre-hook
-    const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, queryOptions?.hookArgs);
-    // const postOnCreate = this._hookOnCreate && await this._hookOnCreate(data, (newData) => {
-    //   data = newData;
-    // }) // immutable version
+    // Call pre-hooks
+    const postOnCreateHooks: HookPostOnCreate<T>[] = [];
+    for (const hook of this._hooksOnCreate) {
+      const postHook = await hook(data, queryOptions?.hookArgs);
+      if (postHook) {
+        postOnCreateHooks.push(postHook);
+      }
+    }
 
     try {
       const result = await col.insertOne(data);
 
-      // Call post-hook
-      if (postOnCreate) {
-        await postOnCreate(result);
+      // Call post-hooks
+      for (const hook of postOnCreateHooks) {
+        await hook(result);
       }
-      // if (postOnCreate) {
-      //   result = await postOnCreate(result) || result;
-      // } // immutable version
 
       return result;
     }
     catch (err) {
 
-      // Call post-hook
-      if (postOnCreate) {
-        await postOnCreate(null, err);
+      // Call post-hooks
+      for (const hook of postOnCreateHooks) {
+        await hook(null, err);
       }
 
       // Throw error again
@@ -500,33 +490,30 @@ export class MongoModel<T = unknown> {
 
     const col = await this.collection();
 
-    // Call pre-hook
-    const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(filter, updateFilter, queryOptions?.hookArgs);
-    // const postOnUpdate = this._hookOnUpdate && await this._hookOnUpdate(
-    //   filter, (newFilter) => {
-    //     filter = newFilter;
-    //   },
-    //   updateFilter, (newUpdateFilter) => {
-    //     updateFilter = newUpdateFilter;
-    //   }
-    // ); // immutable version
+    // Call pre-hooks
+    const postOnUpdateHooks: HookPostOnUpdate[] = [];
+    for (const hook of this._hooksOnUpdate) {
+      const postHook = await hook(filter, updateFilter, queryOptions?.hookArgs);
+      if (postHook) {
+        postOnUpdateHooks.push(postHook);
+      }
+    }
 
     try {
       const result = await col.updateMany(filter, updateFilter, options) as UpdateResult;
 
-      // Call post-hook
-      if (postOnUpdate) {
-        await postOnUpdate(result);
-        // result = await postOnUpdate(result) || result; // immutable version
+      // Call post-hooks
+      for (const hook of postOnUpdateHooks) {
+        await hook(result);
       }
 
       return result;
     }
     catch (err) {
 
-      // Call post-hook
-      if (postOnUpdate) {
-        await postOnUpdate(null, err);
+      // Call post-hooks
+      for (const hook of postOnUpdateHooks) {
+        await hook(null, err);
       }
 
       // Throw error again
@@ -541,37 +528,31 @@ export class MongoModel<T = unknown> {
 
     const col = await this.collection();
 
-    // Call pre-hook
-    const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, queryOptions?.hookArgs);
-    // const postOnDelete = this._hookOnDelete && await this._hookOnDelete(filter, (newFilter) => {
-    //   filter = newFilter;
-    // }) // immutable version
+    // Call pre-hooks
+    const postOnDeleteHooks: HookPostOnDelete[] = [];
+    for (const hook of this._hooksOnDelete) {
+      const postHook = await hook(filter, queryOptions?.hookArgs);
+      if (postHook) {
+        postOnDeleteHooks.push(postHook);
+      }
+    }
 
-    // const documents = await this.find(query)
-    // const documents = await col.find(filter, options).toArray() as T[]
-
-    // console.log(documents)
 
     try {
       const result = await col.deleteMany(filter);
 
-      // if (result.deletedCount < 1) {
-      //   // throw new Error('not_found')
-      // }
-
-      // Call post-hook
-      if (postOnDelete) {
-        await postOnDelete(result);
-        // result = await postOnDelete(result) || result; // immutable version
+      // Call post-hooks
+      for (const hook of postOnDeleteHooks) {
+        await hook(result);
       }
 
       return result;
     }
     catch (err) {
 
-      // Call post-hook
-      if (postOnDelete) {
-        await postOnDelete(null, err);
+      // Call post-hooks
+      for (const hook of postOnDeleteHooks) {
+        await hook(null, err);
       }
 
       // Throw error again
