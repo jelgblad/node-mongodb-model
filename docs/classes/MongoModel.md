@@ -39,7 +39,6 @@
 - [delete](MongoModel.md#delete)
 - [exists](MongoModel.md#exists)
 - [find](MongoModel.md#find)
-- [findById](MongoModel.md#findbyid)
 - [findOne](MongoModel.md#findone)
 - [update](MongoModel.md#update)
 
@@ -65,7 +64,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:78](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L78)
+[src/MongoModel.ts:78](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L78)
 
 ## Properties
 
@@ -75,7 +74,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:59](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L59)
+[src/MongoModel.ts:59](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L59)
 
 ___
 
@@ -93,7 +92,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:58](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L58)
+[src/MongoModel.ts:58](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L58)
 
 ___
 
@@ -109,7 +108,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:599](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L599)
+[src/MongoModel.ts:558](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L558)
 
 ## Hooks Methods
 
@@ -142,7 +141,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:241](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L241)
+[src/MongoModel.ts:241](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L241)
 
 ___
 
@@ -175,7 +174,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:285](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L285)
+[src/MongoModel.ts:285](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L285)
 
 ___
 
@@ -208,7 +207,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:219](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L219)
+[src/MongoModel.ts:219](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L219)
 
 ___
 
@@ -241,7 +240,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:263](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L263)
+[src/MongoModel.ts:263](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L263)
 
 ___
 
@@ -270,7 +269,7 @@ myModel.populate('myParent', doc => {
 
 #### Defined in
 
-[src/MongoModel.ts:304](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L304)
+[src/MongoModel.ts:304](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L304)
 
 ___
 
@@ -293,7 +292,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:612](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L612)
+[src/MongoModel.ts:571](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L571)
 
 ___
 
@@ -307,7 +306,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:89](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L89)
+[src/MongoModel.ts:89](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L89)
 
 ___
 
@@ -330,7 +329,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:451](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L451)
+[src/MongoModel.ts:410](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L410)
 
 ___
 
@@ -352,7 +351,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:527](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L527)
+[src/MongoModel.ts:486](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L486)
 
 ___
 
@@ -372,7 +371,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:319](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L319)
+[src/MongoModel.ts:319](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L319)
 
 ___
 
@@ -394,29 +393,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:329](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L329)
-
-___
-
-### findById
-
-▸ **findById**(`id`, `options?`, `queryOptions?`): `Promise`<`void` \| `T`\>
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `id` | `string` |
-| `options?` | `FindOptions`<`T`\> |
-| `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
-
-#### Returns
-
-`Promise`<`void` \| `T`\>
-
-#### Defined in
-
-[src/MongoModel.ts:410](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L410)
+[src/MongoModel.ts:329](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L329)
 
 ___
 
@@ -438,7 +415,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:370](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L370)
+[src/MongoModel.ts:370](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L370)
 
 ___
 
@@ -461,4 +438,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:489](https://github.com/jelgblad/node-mongodb-model/blob/5a96a15/src/MongoModel.ts#L489)
+[src/MongoModel.ts:448](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L448)

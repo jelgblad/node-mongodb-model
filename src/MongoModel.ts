@@ -407,47 +407,6 @@ export class MongoModel<T = unknown> {
   /**
    * @category Queries
    */
-  async findById(id: string, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<void | T> {
-
-    const col = await this.collection();
-    const filter = { _id: new ObjectId(id) } as Filter<T>;
-
-    // Call pre-hooks
-    const postOnFindHooks: HookPostOnFind<T>[] = [];
-    for (const hook of this._hooksOnFind) {
-      const postHook = await hook(filter, queryOptions?.hookArgs);
-      if (postHook) {
-        postOnFindHooks.push(postHook);
-      }
-    }
-
-    try {
-      let data = await col.findOne(filter, options) as T;
-
-      if (!data) return null;
-
-      data = await this._populateAll(data, queryOptions?.populate || []);
-
-      // Call post-hooks
-      await Promise.all(postOnFindHooks.map(hook => hook ? hook(data) : null));
-
-      return data;
-    }
-    catch (err) {
-
-      // Call post-hook
-      for (const hook of postOnFindHooks) {
-        await hook(null, err);
-      }
-
-      // Throw error again
-      throw err;
-    }
-  }
-
-  /**
-   * @category Queries
-   */
   async create(data: OptionalId<T>, queryOptions?: IQueryOptions) {
 
     const col = await this.collection();
