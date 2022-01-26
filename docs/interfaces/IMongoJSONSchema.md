@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[src/IMongoJSONSchema.ts:39](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/IMongoJSONSchema.ts#L39)
+[src/IMongoJSONSchema.ts:39](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/IMongoJSONSchema.ts#L39)
 
 ___
 
@@ -339,7 +339,7 @@ Omit.items
 
 #### Defined in
 
-[src/IMongoJSONSchema.ts:36](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/IMongoJSONSchema.ts#L36)
+[src/IMongoJSONSchema.ts:36](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/IMongoJSONSchema.ts#L36)
 
 ___
 
@@ -549,7 +549,7 @@ Omit.properties
 
 #### Defined in
 
-[src/IMongoJSONSchema.ts:32](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/IMongoJSONSchema.ts#L32)
+[src/IMongoJSONSchema.ts:32](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/IMongoJSONSchema.ts#L32)
 
 ___
 

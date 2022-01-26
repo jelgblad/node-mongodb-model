@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:22](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L22)
+[src/MongoModel.ts:21](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L21)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:21](https://github.com/jelgblad/node-mongodb-model/blob/0f3ce78/src/MongoModel.ts#L21)
+[src/MongoModel.ts:20](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L20)

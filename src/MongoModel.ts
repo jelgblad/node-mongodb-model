@@ -7,7 +7,6 @@ import {
   FindOptions,
   IndexSpecification,
   InsertOneResult,
-  ObjectId,
   OptionalId,
   TimeSeriesCollectionOptions,
   UpdateFilter,
@@ -35,21 +34,8 @@ export interface IModelOptions {
 
 type MaybePromise<T> = Promise<T> | T;
 
-// Post-hooks
-type HookPostOnFind<T> = (doc: T | void, err?: any) => MaybePromise<void>;
-type HookPostOnCreate<T> = (result: InsertOneResult<T> | void, err?: any) => MaybePromise<void>;
-type HookPostOnUpdate = (result: UpdateResult | void, err?: any) => MaybePromise<void>;
-type HookPostOnDelete = (result: DeleteResult | void, err?: any) => MaybePromise<void>;
-
-// Pre-hooks
-type HookOnFind<T> = (filter: Filter<T>, args: any) => MaybePromise<HookPostOnFind<T> | void>;
-// type HookOnFindIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((doc: T) => MaybePromise<T> | MaybePromise<void>) | void>;
-type HookOnCreate<T> = (data: OptionalId<T>, args: any) => MaybePromise<HookPostOnCreate<T> | void>;
-// type HookOnCreateIM<T> = (data: Partial<T>, setData: (data: Partial<T>) => void, args: any) => MaybePromise<((result: InsertOneResult<T>) => MaybePromise<InsertOneResult<T>> | MaybePromise<void>) | void>;
-type HookOnUpdate<T> = (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) => MaybePromise<HookPostOnUpdate | void>;
-// type HookOnUpdateIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, updateFilter: UpdateFilter<T>, setUpdateFilter: (updateFilter: UpdateFilter<T>) => void, args: any) => MaybePromise<((result: UpdateResult) => MaybePromise<UpdateResult> | MaybePromise<void>) | void>;
-type HookOnDelete<T> = (filter: Filter<T>, args: any) => MaybePromise<HookPostOnDelete | void>;
-// type HookOnDeleteIM<T> = (filter: Filter<T>, setFilter: (filter: Filter<T>) => void, args: any) => MaybePromise<((result: DeleteResult) => MaybePromise<DeleteResult> | MaybePromise<void>) | void>;
+type AnyHookPost = (...args) => void;
+type AnyHook = (...args) => MaybePromise<AnyHookPost | void>;
 
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
@@ -187,19 +173,19 @@ export class MongoModel<T = unknown> {
    */
 
   /** @ignore */
-  private _hooksOnFind: HookOnFind<T>[] = [];
+  private _hooksOnFind: AnyHook[] = [];
 
   /** @ignore */
-  private _hooksOnCreate: HookOnCreate<T>[] = [];
+  private _hooksOnCreate: AnyHook[] = [];
 
   /** @ignore */
-  private _hooksOnUpdate: HookOnUpdate<T>[] = [];
+  private _hooksOnUpdate: AnyHook[] = [];
 
   /** @ignore */
-  private _hooksOnDelete: HookOnDelete<T>[] = [];
+  private _hooksOnDelete: AnyHook[] = [];
 
   /**
-   * The **onFind**-hook runs when `find`, `findOne` or `findById` are called.
+   * The **onFind**-hook runs when `find` or `findOne` are called.
    * 
    * ```typescript
    * myModel.onFind(() => {
@@ -216,7 +202,10 @@ export class MongoModel<T = unknown> {
    * 
    * @category Hooks
    */
-  onFind(hook: HookOnFind<T>) {
+  onFind(
+    hook: (filter: Filter<T>, args: any) =>
+      MaybePromise<((doc: T | void, err?: any) => MaybePromise<void>) | void>
+  ) {
     this._hooksOnFind.push(hook);
   }
 
@@ -238,7 +227,10 @@ export class MongoModel<T = unknown> {
    * 
    * @category Hooks
    */
-  onCreate(hook: HookOnCreate<T>) {
+  onCreate(
+    hook: (data: OptionalId<T>, args: any) =>
+      MaybePromise<((result: InsertOneResult<T> | void, err?: any) => MaybePromise<void>) | void>
+  ) {
     this._hooksOnCreate.push(hook);
   }
 
@@ -260,7 +252,10 @@ export class MongoModel<T = unknown> {
    * 
    * @category Hooks
    */
-  onUpdate(hook: HookOnUpdate<T>) {
+  onUpdate(
+    hook: (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) =>
+      MaybePromise<((result: UpdateResult | void, err?: any) => MaybePromise<void>) | void>
+  ) {
     this._hooksOnUpdate.push(hook);
   }
 
@@ -282,7 +277,10 @@ export class MongoModel<T = unknown> {
    * 
    * @category Hooks
    */
-  onDelete(hook: HookOnDelete<T>) {
+  onDelete(
+    hook: (filter: Filter<T>, args: any) =>
+      MaybePromise<((result: DeleteResult | void, err?: any) => MaybePromise<void>) | void>
+  ) {
     this._hooksOnDelete.push(hook);
   }
 
@@ -331,13 +329,7 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postOnFindHooks: HookPostOnFind<T>[] = [];
-    for (const hook of this._hooksOnFind) {
-      const postHook = await hook(filter, queryOptions?.hookArgs);
-      if (postHook) {
-        postOnFindHooks.push(postHook);
-      }
-    }
+    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions?.hookArgs);
 
     try {
       let data = await col.find(filter, options).toArray() as T[];
@@ -345,19 +337,15 @@ export class MongoModel<T = unknown> {
 
       // Call post-hooks
       for (const d of data) {
-        for (const hook of postOnFindHooks) {
-          await hook(d);
-        }
+        await this._callPostHooks(postHooks, d);
       }
 
       return data;
     }
     catch (err) {
 
-      // Call post-hook
-      for (const hook of postOnFindHooks) {
-        await hook(null, err);
-      }
+      // Call post-hooks
+      await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
       throw err;
@@ -372,13 +360,7 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postOnFindHooks: HookPostOnFind<T>[] = [];
-    for (const hook of this._hooksOnFind) {
-      const postHook = await hook(filter, queryOptions?.hookArgs);
-      if (postHook) {
-        postOnFindHooks.push(postHook);
-      }
-    }
+    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions?.hookArgs);
 
     try {
       let data = await col.findOne(filter, options) as T;
@@ -388,16 +370,15 @@ export class MongoModel<T = unknown> {
       data = await this._populateAll(data, queryOptions?.populate || []);
 
       // Call post-hooks
-      await Promise.all(postOnFindHooks.map(hook => hook ? hook(data) : null));
+      await this._callPostHooks(postHooks, data);
+      // await Promise.all(postOnFindHooks.map(hook => hook ? hook(data) : null));
 
       return data;
     }
     catch (err) {
 
-      // Call post-hook
-      for (const hook of postOnFindHooks) {
-        await hook(null, err);
-      }
+      // Call post-hooks
+      await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
       throw err;
@@ -412,30 +393,20 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postOnCreateHooks: HookPostOnCreate<T>[] = [];
-    for (const hook of this._hooksOnCreate) {
-      const postHook = await hook(data, queryOptions?.hookArgs);
-      if (postHook) {
-        postOnCreateHooks.push(postHook);
-      }
-    }
+    const postHooks = await this._callPreHooks(this._hooksOnCreate, data, queryOptions?.hookArgs);
 
     try {
       const result = await col.insertOne(data);
 
       // Call post-hooks
-      for (const hook of postOnCreateHooks) {
-        await hook(result);
-      }
+      await this._callPostHooks(postHooks, result);
 
       return result;
     }
     catch (err) {
 
       // Call post-hooks
-      for (const hook of postOnCreateHooks) {
-        await hook(null, err);
-      }
+      await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
       throw err;
@@ -450,30 +421,20 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postOnUpdateHooks: HookPostOnUpdate[] = [];
-    for (const hook of this._hooksOnUpdate) {
-      const postHook = await hook(filter, updateFilter, queryOptions?.hookArgs);
-      if (postHook) {
-        postOnUpdateHooks.push(postHook);
-      }
-    }
+    const postHooks = await this._callPreHooks(this._hooksOnUpdate, filter, updateFilter, queryOptions?.hookArgs);
 
     try {
       const result = await col.updateMany(filter, updateFilter, options) as UpdateResult;
 
       // Call post-hooks
-      for (const hook of postOnUpdateHooks) {
-        await hook(result);
-      }
+      await this._callPostHooks(postHooks, result);
 
       return result;
     }
     catch (err) {
 
       // Call post-hooks
-      for (const hook of postOnUpdateHooks) {
-        await hook(null, err);
-      }
+      await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
       throw err;
@@ -488,31 +449,20 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postOnDeleteHooks: HookPostOnDelete[] = [];
-    for (const hook of this._hooksOnDelete) {
-      const postHook = await hook(filter, queryOptions?.hookArgs);
-      if (postHook) {
-        postOnDeleteHooks.push(postHook);
-      }
-    }
-
+    const postHooks = await this._callPreHooks(this._hooksOnDelete, filter, queryOptions?.hookArgs);
 
     try {
       const result = await col.deleteMany(filter);
 
       // Call post-hooks
-      for (const hook of postOnDeleteHooks) {
-        await hook(result);
-      }
+      await this._callPostHooks(postHooks, result);
 
       return result;
     }
     catch (err) {
 
       // Call post-hooks
-      for (const hook of postOnDeleteHooks) {
-        await hook(null, err);
-      }
+      await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
       throw err;
@@ -568,6 +518,7 @@ export class MongoModel<T = unknown> {
     }
   }
 
+  /** @ignore */
   private _trimObjectShallow(obj: any, schema: IMongoJSONSchema) {
     if (schema.additionalProperties === false) {
       for (const key in obj) {
@@ -578,6 +529,46 @@ export class MongoModel<T = unknown> {
           this._trimObjectShallow(obj[key], schema.properties[key] as IMongoJSONSchema);
         }
       }
+    }
+  }
+
+  /**
+   * @ignore
+   * 
+   * Call hooks in series with the supplied args, and return optional post-hooks
+   * @param hooks Array of hook-functions to call
+   * @param args Args to pass to hook-function
+   * @returns Array of postHook-functions
+   */
+  private async _callPreHooks(hooks: AnyHook[], ...args: unknown[]) {
+    // Post hooks
+    const postHooks: AnyHookPost[] = [];
+
+    // Loop hooks
+    for (const hook of hooks) {
+      // Call and await the pre-hook
+      const postHook = await hook(...args);
+
+      // Check if hook returned a postHook
+      if (postHook) {
+        // Cue up post-hooks
+        postHooks.push(postHook);
+      }
+    }
+
+    return postHooks;
+  }
+
+  /**
+   * @ignore
+   * 
+   * Call post-hooks in series with the supplied args
+   * @param hooks Array of hook-functions to call
+   * @param args Args to pass to hook-function
+   */
+  private async _callPostHooks(hooks: AnyHookPost[], ...args: unknown[]) {
+    for (const hook of hooks) {
+      await hook(...args);
     }
   }
 }
