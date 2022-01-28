@@ -76,8 +76,6 @@ export class MongoModel<T = unknown> {
 
     this.onFind((f, queryOptions) => async doc => {
       if (queryOptions && queryOptions.populate && doc) {
-        // console.log('Populate', 'yes');
-
         await this._populateAll(doc, queryOptions.populate);
       }
     });
