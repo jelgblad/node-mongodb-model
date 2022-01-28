@@ -16,9 +16,12 @@ import {
 import { deserialize, serialize } from 'bson';
 import { IMongoJSONSchema } from './IMongoJSONSchema';
 
-export interface IQueryOptions {
+export type IQueryOptions = {
+  // acept any property
+  [key: string]: unknown
+
+  // "hard-coded" properties
   populate?: string[]
-  hookArgs?: any
 }
 
 export interface IModelOptions {
@@ -70,6 +73,14 @@ export class MongoModel<T = unknown> {
     this._schema = options && options.schema;
 
     this.prepareCollection(options);
+
+    this.onFind((f, queryOptions) => async doc => {
+      if (queryOptions && queryOptions.populate && doc) {
+        // console.log('Populate', 'yes');
+
+        await this._populateAll(doc, queryOptions.populate);
+      }
+    });
   }
 
   collection() {
@@ -203,7 +214,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onFind(
-    hook: (filter: Filter<T>, args: any) =>
+    hook: (filter: Filter<T>, queryOptions: void | IQueryOptions) =>
       MaybePromise<((doc: T | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnFind.push(hook);
@@ -228,7 +239,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onCreate(
-    hook: (data: OptionalId<T>, args: any) =>
+    hook: (data: OptionalId<T>, queryOptions: void | IQueryOptions) =>
       MaybePromise<((result: InsertOneResult<T> | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnCreate.push(hook);
@@ -253,7 +264,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onUpdate(
-    hook: (filter: Filter<T>, updateFilter: UpdateFilter<T>, args: any) =>
+    hook: (filter: Filter<T>, updateFilter: UpdateFilter<T>, queryOptions: void | IQueryOptions) =>
       MaybePromise<((result: UpdateResult | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnUpdate.push(hook);
@@ -278,7 +289,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onDelete(
-    hook: (filter: Filter<T>, args: any) =>
+    hook: (filter: Filter<T>, queryOptions: void | IQueryOptions) =>
       MaybePromise<((result: DeleteResult | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnDelete.push(hook);
@@ -329,11 +340,10 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions?.hookArgs);
+    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
 
     try {
-      let data = await col.find(filter, options).toArray() as T[];
-      data = await Promise.all(data.map(d => this._populateAll(d, queryOptions?.populate || [])));
+      const data = await col.find(filter, options).toArray() as T[];
 
       // Call post-hooks
       for (const d of data) {
@@ -360,14 +370,12 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions?.hookArgs);
+    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
 
     try {
-      let data = await col.findOne(filter, options) as T;
+      const data = await col.findOne(filter, options) as T;
 
       if (!data) return null;
-
-      data = await this._populateAll(data, queryOptions?.populate || []);
 
       // Call post-hooks
       await this._callPostHooks(postHooks, data);
@@ -393,7 +401,7 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnCreate, data, queryOptions?.hookArgs);
+    const postHooks = await this._callPreHooks(this._hooksOnCreate, data, queryOptions);
 
     try {
       const result = await col.insertOne(data);
@@ -421,7 +429,7 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnUpdate, filter, updateFilter, queryOptions?.hookArgs);
+    const postHooks = await this._callPreHooks(this._hooksOnUpdate, filter, updateFilter, queryOptions);
 
     try {
       const result = await col.updateMany(filter, updateFilter, options) as UpdateResult;
@@ -449,7 +457,7 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnDelete, filter, queryOptions?.hookArgs);
+    const postHooks = await this._callPreHooks(this._hooksOnDelete, filter, queryOptions);
 
     try {
       const result = await col.deleteMany(filter);
@@ -476,15 +484,13 @@ export class MongoModel<T = unknown> {
 
     const populatedProps = await Promise.all(properties.map(prop => this._populate(doc, prop)));
 
-    const newDoc = Object.assign({}, doc);
-
-    properties.forEach((value, i) => {
+    for (let i = 0; i < properties.length; i++) {
       if (populatedProps[i]) {
-        newDoc[value] = populatedProps[i];
+        doc[properties[i]] = populatedProps[i];
       }
-    });
+    }
 
-    return newDoc;
+    return doc;
   }
 
   /** @ignore */

@@ -12,13 +12,33 @@
 
 - [IModelOptions](interfaces/IModelOptions.md)
 - [IMongoJSONSchema](interfaces/IMongoJSONSchema.md)
-- [IQueryOptions](interfaces/IQueryOptions.md)
 
 ### Type aliases
 
+- [IQueryOptions](modules.md#iqueryoptions)
 - [IndexDefinition](modules.md#indexdefinition)
 
 ## Type aliases
+
+### IQueryOptions
+
+Ƭ **IQueryOptions**: `Object`
+
+#### Index signature
+
+▪ [key: `string`]: `unknown`
+
+#### Type declaration
+
+| Name | Type |
+| :------ | :------ |
+| `populate?` | `string`[] |
+
+#### Defined in
+
+[src/MongoModel.ts:19](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L19)
+
+___
 
 ### IndexDefinition
 
@@ -33,4 +53,4 @@
 
 #### Defined in
 
-[src/MongoModel.ts:40](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L40)
+[src/MongoModel.ts:43](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L43)

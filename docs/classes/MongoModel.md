@@ -63,7 +63,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:64](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L64)
+[src/MongoModel.ts:67](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L67)
 
 ## Properties
 
@@ -73,7 +73,7 @@
 
 #### Defined in
 
-[src/MongoModel.ts:45](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L45)
+[src/MongoModel.ts:48](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L48)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:44](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L44)
+[src/MongoModel.ts:47](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L47)
 
 ___
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:508](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L508)
+[src/MongoModel.ts:514](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L514)
 
 ## Hooks Methods
 
@@ -132,7 +132,7 @@ Hooks runs in the order they are defined.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | (`data`: `OptionalId`<`T`\>, `args`: `any`) => `MaybePromise`<`void` \| (`result`: `void` \| `InsertOneResult`<`T`\>, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
+| `hook` | (`data`: `OptionalId`<`T`\>, `queryOptions`: `void` \| [`IQueryOptions`](../modules.md#iqueryoptions)) => `MaybePromise`<`void` \| (`result`: `void` \| `InsertOneResult`<`T`\>, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -140,7 +140,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:230](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L230)
+[src/MongoModel.ts:241](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L241)
 
 ___
 
@@ -165,7 +165,7 @@ Hooks runs in the order they are defined.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | (`filter`: `Filter`<`T`\>, `args`: `any`) => `MaybePromise`<`void` \| (`result`: `void` \| `DeleteResult`, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
+| `hook` | (`filter`: `Filter`<`T`\>, `queryOptions`: `void` \| [`IQueryOptions`](../modules.md#iqueryoptions)) => `MaybePromise`<`void` \| (`result`: `void` \| `DeleteResult`, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -173,7 +173,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:280](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L280)
+[src/MongoModel.ts:291](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L291)
 
 ___
 
@@ -198,7 +198,7 @@ Hooks runs in the order they are defined.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | (`filter`: `Filter`<`T`\>, `args`: `any`) => `MaybePromise`<`void` \| (`doc`: `void` \| `T`, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
+| `hook` | (`filter`: `Filter`<`T`\>, `queryOptions`: `void` \| [`IQueryOptions`](../modules.md#iqueryoptions)) => `MaybePromise`<`void` \| (`doc`: `void` \| `T`, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -206,7 +206,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:205](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L205)
+[src/MongoModel.ts:216](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L216)
 
 ___
 
@@ -231,7 +231,7 @@ Hooks runs in the order they are defined.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `hook` | (`filter`: `Filter`<`T`\>, `updateFilter`: `UpdateFilter`<`T`\>, `args`: `any`) => `MaybePromise`<`void` \| (`result`: `void` \| `UpdateResult`, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
+| `hook` | (`filter`: `Filter`<`T`\>, `updateFilter`: `UpdateFilter`<`T`\>, `queryOptions`: `void` \| [`IQueryOptions`](../modules.md#iqueryoptions)) => `MaybePromise`<`void` \| (`result`: `void` \| `UpdateResult`, `err?`: `any`) => `MaybePromise`<`void`\>\> | A function that is called before cursor is created in MongoDB and optionally returns a function that is called after results are returned from MongoDB. |
 
 #### Returns
 
@@ -239,7 +239,7 @@ Hooks runs in the order they are defined.
 
 #### Defined in
 
-[src/MongoModel.ts:255](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L255)
+[src/MongoModel.ts:266](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L266)
 
 ___
 
@@ -268,7 +268,7 @@ myModel.populate('myParent', doc => {
 
 #### Defined in
 
-[src/MongoModel.ts:302](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L302)
+[src/MongoModel.ts:313](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L313)
 
 ___
 
@@ -284,7 +284,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:75](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L75)
+[src/MongoModel.ts:86](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L86)
 
 ___
 
@@ -299,7 +299,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `data` | `OptionalId`<`T`\> |
-| `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
+| `queryOptions?` | [`IQueryOptions`](../modules.md#iqueryoptions) |
 
 #### Returns
 
@@ -307,7 +307,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:391](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L391)
+[src/MongoModel.ts:399](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L399)
 
 ___
 
@@ -321,7 +321,7 @@ ___
 | :------ | :------ |
 | `filter?` | `Filter`<`T`\> |
 | `options?` | `FindOptions`<`T`\> |
-| `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
+| `queryOptions?` | [`IQueryOptions`](../modules.md#iqueryoptions) |
 
 #### Returns
 
@@ -329,7 +329,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:447](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L447)
+[src/MongoModel.ts:455](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L455)
 
 ___
 
@@ -349,7 +349,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:317](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L317)
+[src/MongoModel.ts:328](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L328)
 
 ___
 
@@ -363,7 +363,7 @@ ___
 | :------ | :------ |
 | `filter?` | `Filter`<`T`\> |
 | `options?` | `FindOptions`<`T`\> |
-| `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
+| `queryOptions?` | [`IQueryOptions`](../modules.md#iqueryoptions) |
 
 #### Returns
 
@@ -371,7 +371,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:327](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L327)
+[src/MongoModel.ts:338](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L338)
 
 ___
 
@@ -385,7 +385,7 @@ ___
 | :------ | :------ |
 | `filter?` | `Filter`<`T`\> |
 | `options?` | `FindOptions`<`T`\> |
-| `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
+| `queryOptions?` | [`IQueryOptions`](../modules.md#iqueryoptions) |
 
 #### Returns
 
@@ -393,7 +393,7 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:358](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L358)
+[src/MongoModel.ts:368](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L368)
 
 ___
 
@@ -408,7 +408,7 @@ ___
 | `filter` | `Filter`<`T`\> |
 | `updateFilter` | `UpdateFilter`<`T`\> |
 | `options?` | `UpdateOptions` |
-| `queryOptions?` | [`IQueryOptions`](../interfaces/IQueryOptions.md) |
+| `queryOptions?` | [`IQueryOptions`](../modules.md#iqueryoptions) |
 
 #### Returns
 
@@ -416,4 +416,4 @@ ___
 
 #### Defined in
 
-[src/MongoModel.ts:419](https://github.com/jelgblad/node-mongodb-model/blob/91514fd/src/MongoModel.ts#L419)
+[src/MongoModel.ts:427](https://github.com/jelgblad/node-mongodb-model/blob/ba847a7/src/MongoModel.ts#L427)

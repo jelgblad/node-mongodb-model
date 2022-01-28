@@ -10,6 +10,7 @@ interface IModel {
   prop2?: string
   prop3?: string
   prop4?: string
+  prop5?: any
 }
 
 let model: MongoModel<IModel>;
@@ -60,7 +61,7 @@ describe('MongoModel', () => {
         d.prop1 = 'defined in pre hook';
 
         // Attach hookArgs to data
-        d.prop2 = args;
+        d.prop5 = args;
 
         return result => {
           if (result) {
@@ -96,15 +97,15 @@ describe('MongoModel', () => {
       expect(result.prop1).to.equal('defined in post hook');
     });
 
-    it('should pass hookArgs to hook', async () => {
+    it('should pass queryOptions to hook', async () => {
 
       const insertData: IModel = {
         ref: 'MongoModel.onCreate()'
       };
 
-      await model.create(insertData, { hookArgs: { arg1: 'value1' } });
+      await model.create(insertData, { arg1: 'value1' });
 
-      expect(insertData.prop2).to.eql({ arg1: 'value1' });
+      expect(insertData.prop5).to.eql({ arg1: 'value1' });
     });
 
     after(async () => {
@@ -126,7 +127,7 @@ describe('MongoModel', () => {
         f.prop1 = 'b';
 
         // Attach hookArgs to filter
-        f.prop2 = args;
+        f.prop5 = args;
 
         return doc => {
           if (doc) {
@@ -175,15 +176,15 @@ describe('MongoModel', () => {
       });
     });
 
-    it('should pass hookArgs to hook', async () => {
+    it('should pass queryOptions to hook', async () => {
 
       const filter: mongodb.Filter<IModel> = {
-        ref: 'MongoModel.onFind()'
+        ref: 'MongoModel.onFind()',
       };
 
-      await model.find(filter, {}, { hookArgs: { arg1: 'value1' } });
+      await model.find(filter, {}, { arg1: 'value1' });
 
-      expect(filter.prop2).to.eql({ arg1: 'value1' });
+      expect(filter.prop5).to.eql({ arg1: 'value1' });
     });
 
     it('should be able to add multiple hooks', async () => {
@@ -292,7 +293,7 @@ describe('MongoModel', () => {
         f.prop1 = 'defined in pre hook';
 
         // Attach hookArgs to filter
-        f.prop2 = args;
+        f.prop5 = args;
 
         uf.$set = {
           ...uf.$set,
@@ -354,7 +355,7 @@ describe('MongoModel', () => {
       expect(result.prop1).to.equal('defined in post hook');
     });
 
-    it('should pass hookArgs to hook', async () => {
+    it('should pass queryOptions to hook', async () => {
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onUpdate()'
@@ -364,9 +365,9 @@ describe('MongoModel', () => {
         $set: { prop2: 'updated' }
       };
 
-      await model.update(filter, updateFilter, {}, { hookArgs: { arg1: 'value1' } });
+      await model.update(filter, updateFilter, {}, { arg1: 'value1' });
 
-      expect(filter.prop2).to.eql({ arg1: 'value1' });
+      expect(filter.prop5).to.eql({ arg1: 'value1' });
     });
 
     after(async () => {
@@ -387,7 +388,7 @@ describe('MongoModel', () => {
         f.prop1 = 'defined in pre hook';
 
         // Attach hookArgs to filter
-        f.prop2 = args;
+        f.prop5 = args;
 
         return (result: any) => {
           result.prop1 = 'defined in post hook';
@@ -417,15 +418,15 @@ describe('MongoModel', () => {
       expect(result.prop1).to.equal('defined in post hook');
     });
 
-    it('should pass hookArgs to hook', async () => {
+    it('should pass queryOptions to hook', async () => {
 
       const filter: mongodb.Filter<IModel> = {
         ref: 'MongoModel.onDelete()'
       };
 
-      await model.delete(filter, {}, { hookArgs: { arg1: 'value1' } });
+      await model.delete(filter, {}, { arg1: 'value1' });
 
-      expect(filter.prop2).to.eql({ arg1: 'value1' });
+      expect(filter.prop5).to.eql({ arg1: 'value1' });
     });
   });
 
