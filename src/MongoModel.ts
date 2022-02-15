@@ -338,9 +338,12 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
+    const [postHooks, error] = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
 
     try {
+      // Throw hook error
+      if (error) throw error;
+
       const data = await col.find(filter, options).toArray() as T[];
 
       // Call post-hooks
@@ -352,7 +355,7 @@ export class MongoModel<T = unknown> {
     }
     catch (err) {
 
-      // Call post-hooks
+      // Call post-hooks with error
       await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
@@ -368,9 +371,12 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
+    const [postHooks, error] = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
 
     try {
+      // Throw hook error
+      if (error) throw error;
+
       const data = await col.findOne(filter, options) as T;
 
       if (!data) return null;
@@ -383,7 +389,7 @@ export class MongoModel<T = unknown> {
     }
     catch (err) {
 
-      // Call post-hooks
+      // Call post-hooks with error
       await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
@@ -399,9 +405,12 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnCreate, data, queryOptions);
+    const [postHooks, error] = await this._callPreHooks(this._hooksOnCreate, data, queryOptions);
 
     try {
+      // Throw hook error
+      if (error) throw error;
+
       const result = await col.insertOne(data);
 
       // Call post-hooks
@@ -411,7 +420,7 @@ export class MongoModel<T = unknown> {
     }
     catch (err) {
 
-      // Call post-hooks
+      // Call post-hooks with error
       await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
@@ -427,9 +436,12 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnUpdate, filter, updateFilter, queryOptions);
+    const [postHooks, error] = await this._callPreHooks(this._hooksOnUpdate, filter, updateFilter, queryOptions);
 
     try {
+      // Throw hook error
+      if (error) throw error;
+
       const result = await col.updateMany(filter, updateFilter, options) as UpdateResult;
 
       // Call post-hooks
@@ -439,7 +451,7 @@ export class MongoModel<T = unknown> {
     }
     catch (err) {
 
-      // Call post-hooks
+      // Call post-hooks with error
       await this._callPostHooks(postHooks, null, err);
 
       // Throw error again
@@ -455,12 +467,15 @@ export class MongoModel<T = unknown> {
     const col = await this.collection();
 
     // Call pre-hooks
-    const postHooks = await this._callPreHooks(this._hooksOnDelete, filter, queryOptions);
+    const [postHooks, error] = await this._callPreHooks(this._hooksOnDelete, filter, queryOptions);
 
     try {
+      // Throw hook error
+      if (error) throw error;
+
       const result = await col.deleteMany(filter);
 
-      // Call post-hooks
+      // Call post-hooks with error
       await this._callPostHooks(postHooks, result);
 
       return result;
@@ -544,23 +559,28 @@ export class MongoModel<T = unknown> {
    * @param args Args to pass to hook-function
    * @returns Array of postHook-functions
    */
-  private async _callPreHooks(hooks: AnyHook[], ...args: unknown[]) {
+  private async _callPreHooks(hooks: AnyHook[], ...args: unknown[]): Promise<[AnyHookPost[], any]> {
     // Post hooks
     const postHooks: AnyHookPost[] = [];
 
     // Loop hooks
     for (const hook of hooks) {
-      // Call and await the pre-hook
-      const postHook = await hook(...args);
+      try {
+        // Call and await the pre-hook
+        const postHook = await hook(...args);
 
-      // Check if hook returned a postHook
-      if (postHook) {
-        // Cue up post-hooks
-        postHooks.push(postHook);
+        // Check if hook returned a postHook
+        if (postHook) {
+          // Cue up post-hooks
+          postHooks.push(postHook);
+        }
+      }
+      catch (err) {
+        return [postHooks, err];
       }
     }
 
-    return postHooks;
+    return [postHooks, null];
   }
 
   /**
