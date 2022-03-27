@@ -133,6 +133,7 @@ export class MongoModel<T = unknown> {
     }
     else {
 
+      // Update schema
       if (options?.schema) {
 
         if (process.env.NODE_ENV === 'development') {
@@ -143,6 +144,20 @@ export class MongoModel<T = unknown> {
         await db.command({ collMod: this.collectionName, validator });
         await db.command({ collMod: this.collectionName, validationAction: validationAction });
         await db.command({ collMod: this.collectionName, validationLevel: validationLevel });
+      }
+
+      // Update timeseries
+      if (options?.timeseries) {
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Updating timeseries options for collection "${this.collectionName}"...`);
+        }
+
+        // Set expireAfterSeconds
+        await db.command({
+          collMod: this.collectionName,
+          expireAfterSeconds: options?.timeseries?.expireAfterSeconds
+        });
       }
     }
 
