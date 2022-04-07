@@ -415,7 +415,7 @@ export class MongoModel<T = unknown> {
   /**
    * @category Queries
    */
-  async create(data: OptionalId<T>, queryOptions?: IQueryOptions) {
+  async create(data: Partial<OptionalId<T>>, queryOptions?: IQueryOptions) {
 
     const col = await this.collection();
 
@@ -426,7 +426,7 @@ export class MongoModel<T = unknown> {
       // Throw hook error
       if (error) throw error;
 
-      const result = await col.insertOne(data);
+      const result = await col.insertOne(data as OptionalId<T>);
 
       // Call post-hooks
       await this._callPostHooks(postHooks, result);
