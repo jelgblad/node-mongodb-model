@@ -1,8 +1,11 @@
 import 'mocha';
 import { expect } from 'chai';
 import * as mongodb from 'mongodb';
-import { getDb } from './database';
+import { getConnection } from './database';
 import { MongoModel } from '../src/MongoModel';
+
+const getDb = () => getConnection().then(c => c.db('mongodb-model-test'));
+
 
 interface IModel {
   ref: string
@@ -20,7 +23,7 @@ describe('MongoModel', () => {
   describe('new MongoModel()', () => {
 
     before(async () => {
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
     });
 
@@ -28,7 +31,7 @@ describe('MongoModel', () => {
       expect(model).to.instanceOf(MongoModel);
     });
 
-    const tmpModel = new MongoModel<{ _id: number, hello: string }>(getDb, 'tmpCollection');
+    const tmpModel = new MongoModel<{ _id: number, hello: string }>(getConnection, 'tmpCollection');
 
     it('should be able to change type on _id', async () => {
       const result = await tmpModel.create({ _id: 1, hello: 'world' });
@@ -52,7 +55,7 @@ describe('MongoModel', () => {
   describe('MongoModel.onCreate()', () => {
 
     before(async () => {
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
     });
 
@@ -120,7 +123,7 @@ describe('MongoModel', () => {
 
     before(async () => {
 
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
       model.onFind((f, args) => {
@@ -273,6 +276,23 @@ describe('MongoModel', () => {
       expect(result[0].prop2).to.equal('result hook 2');
     });
 
+    // it('should pass error to caller', async () => {
+
+    //   model.onFind((filer, queryOptions, error) => {
+    //     console.log('before');
+
+    //     throw new Error();
+
+    //     return () => {
+    //       console.log('after');
+    //     };
+    //   });
+
+    //   const result = await model.findOne({});
+
+    //   console.log(result);
+    // });
+
 
     after(async () => {
       await model.delete({
@@ -286,7 +306,7 @@ describe('MongoModel', () => {
 
     before(async () => {
 
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
       model.onUpdate((f, uf, args) => {
@@ -381,7 +401,7 @@ describe('MongoModel', () => {
   describe('MongoModel.onDelete()', () => {
 
     before(async () => {
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
       model.onDelete((f, args) => {
@@ -435,7 +455,7 @@ describe('MongoModel', () => {
 
     before(async () => {
 
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
       model.populate('prop2', d => {
@@ -485,10 +505,10 @@ describe('MongoModel', () => {
 
     before(async () => {
 
-      model = new MongoModel(getDb, 'myCollection');
+      model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
-      model = new MongoModel(getDb, 'trimCollection', {
+      model = new MongoModel(getConnection, 'trimCollection', {
         schema: {
           properties: {
             a: { bsonType: 'string' },

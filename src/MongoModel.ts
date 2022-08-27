@@ -11,7 +11,8 @@ import {
   TimeSeriesCollectionOptions,
   UpdateFilter,
   UpdateOptions,
-  UpdateResult
+  UpdateResult,
+  MongoClient
 } from 'mongodb';
 import { deserialize, serialize } from 'bson';
 import { IMongoJSONSchema } from './IMongoJSONSchema';
@@ -25,12 +26,13 @@ export type IQueryOptions = {
 }
 
 export interface IModelOptions {
-  schema?: IMongoJSONSchema,
-  validationAction?: 'error' | 'warn',
-  validationLevel?: 'off' | 'moderate' | 'strict',
-  indices?: IndexDefinition[],
+  defaultDatabase?: string
+  schema?: IMongoJSONSchema
+  validationAction?: 'error' | 'warn'
+  validationLevel?: 'off' | 'moderate' | 'strict'
+  indices?: IndexDefinition[]
   timeseries?: {
-    timeseries: TimeSeriesCollectionOptions,
+    timeseries: TimeSeriesCollectionOptions
     expireAfterSeconds?: number
   }
 }
@@ -44,16 +46,25 @@ export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateI
 
 export class MongoModel<T = unknown> {
 
-  readonly db: () => Promise<Db>
+  // readonly db: () => Promise<Db>
   readonly collectionName: string
+
   // readonly schema?: IMongoJSONSchema
   // readonly indexDefinitions?: IndexDefinition[]
 
   /** @ignore */
-  private isCollectionReady = false;
+  private getConnection: () => Promise<MongoClient>
 
   /** @ignore */
-  private collectionReadyCallbacks: (() => void)[] = []
+  private options?: IModelOptions
+
+  /** @ignore */
+  private collectionReadyInDatabases: string[] = [];
+  // private isCollectionReady = false;
+
+  /** @ignore */
+  private collectionReadyCallbacks: { [database: string]: (() => void)[] } = {}
+  // private collectionReadyCallbacks: (() => void)[] = []
 
   /** @ignore */
   private populateCallbacks: {
@@ -64,15 +75,18 @@ export class MongoModel<T = unknown> {
   private _schema: IMongoJSONSchema;
 
 
-  constructor(db: () => Promise<Db>, collectionName: string, options?: IModelOptions) {
-    this.db = db;
+  constructor(getConnection: () => Promise<MongoClient>, collectionName: string, options?: IModelOptions) {
+    // this.db = db;
+    this.getConnection = getConnection;
+
     this.collectionName = collectionName;
     // this.schema = options?.schema
     // this.indexDefinitions = options?.indices
+    this.options = options;
 
     this._schema = options && options.schema;
 
-    this.prepareCollection(options);
+    // this.prepareCollection(options);
 
     this.onFind((f, queryOptions) => async doc => {
       if (queryOptions && queryOptions.populate && doc) {
@@ -81,50 +95,66 @@ export class MongoModel<T = unknown> {
     });
   }
 
-  collection() {
+  
+  collection(database?: string) {
+
+    const _database = database || this.options?.defaultDatabase;
+
     return new Promise<Collection<T>>(resolve => {
+      this.getConnection().then(c => c.db(_database)).then(db => {
 
-      // Return immediately if ready
-      if (this.isCollectionReady) {
-        return resolve(this.db().then(db => db.collection(this.collectionName)));
-      }
+        // Return immediately if ready
+        if (this.collectionReadyInDatabases.indexOf(db.databaseName) > -1) {
+          return resolve(db.collection(this.collectionName));
+        }
+        else if (!(db.databaseName in this.collectionReadyCallbacks)) {
 
-      // Define callback function
-      const cb = () => {
-        // Resolve promise
-        return resolve(this.db().then(db => db.collection(this.collectionName)));
-      };
-      // Add callback function
-      this.collectionReadyCallbacks.push(cb);
+          // Create array for callbacks
+          this.collectionReadyCallbacks[db.databaseName] = [];
+
+          // Prepare collection
+          this.prepareCollection(_database);
+        }
+
+        // Define callback function
+        const cb = () => {
+          // Resolve promise
+          return resolve(db.collection(this.collectionName));
+        };
+        // Add callback function
+        this.collectionReadyCallbacks[db.databaseName].push(cb);
+      });
     });
   }
 
-  /** @ignore */
-  private async prepareCollection(options?: IModelOptions) {
 
-    const db = await this.db();
+  /** @ignore */
+  private async prepareCollection(database?: string) {
+
+    // const db = await this.db();
+    const db = await this.getConnection().then(c => c.db(database));
 
     const validator = {
-      ...(options?.schema && { $jsonSchema: options.schema })
+      ...(this.options?.schema && { $jsonSchema: this.options.schema })
     };
-    const validationAction = options?.validationAction || undefined;
-    const validationLevel = options?.validationLevel || undefined;
+    const validationAction = this.options?.validationAction || undefined;
+    const validationLevel = this.options?.validationLevel || undefined;
 
     const collectionExists = await db.listCollections({ name: this.collectionName }).toArray().then(cols => cols.length > 0);
 
     if (!collectionExists) {
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Creating collection "${this.collectionName}"...`);
+        console.log(`Creating collection "${this.collectionName}" in database "${db.databaseName}"...`);
       }
 
       try {
         await db.createCollection(this.collectionName, {
           ...(validationLevel && { validationAction }),
           ...(validationLevel && { validationLevel }),
-          ...(options?.schema && { validator }),
-          ...(options?.timeseries && { timeseries: options?.timeseries.timeseries }),
-          ...(options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: options?.timeseries.expireAfterSeconds }),
+          ...(this.options?.schema && { validator }),
+          ...(this.options?.timeseries && { timeseries: this.options?.timeseries.timeseries }),
+          ...(this.options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: this.options?.timeseries.expireAfterSeconds }),
         });
       }
       catch (err) {
@@ -134,10 +164,10 @@ export class MongoModel<T = unknown> {
     else {
 
       // Update schema
-      if (options?.schema) {
+      if (this.options?.schema) {
 
         if (process.env.NODE_ENV === 'development') {
-          console.log(`Updating validator for collection "${this.collectionName}"...`);
+          console.log(`Updating validator for collection "${this.collectionName}" in database "${db.databaseName}"...`);
         }
 
         // Update validation
@@ -147,24 +177,24 @@ export class MongoModel<T = unknown> {
       }
 
       // Update timeseries
-      if (options?.timeseries) {
+      if (this.options?.timeseries) {
 
         if (process.env.NODE_ENV === 'development') {
-          console.log(`Updating timeseries options for collection "${this.collectionName}"...`);
+          console.log(`Updating timeseries options for collection "${this.collectionName}" in database "${db.databaseName}"...`);
         }
 
         // Set expireAfterSeconds
         await db.command({
           collMod: this.collectionName,
-          expireAfterSeconds: options?.timeseries?.expireAfterSeconds
+          expireAfterSeconds: this.options?.timeseries?.expireAfterSeconds
         });
       }
     }
 
-    if (options?.indices) {
+    if (this.options?.indices) {
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Updating indices for collection "${this.collectionName}"...`);
+        console.log(`Updating indices for collection "${this.collectionName}" in database "${db.databaseName}"...`);
       }
 
       const col = db.collection(this.collectionName);
@@ -173,25 +203,26 @@ export class MongoModel<T = unknown> {
       await col.dropIndexes();
 
       // Recreate indexes
-      options.indices.forEach(async def => {
+      this.options.indices.forEach(async def => {
         await col.createIndex(def.indexSpec, def.options);
       });
     }
 
     // Set isCollectionReady-flag
-    this.isCollectionReady = true;
+    this.collectionReadyInDatabases.push(db.databaseName);
+    // this.isCollectionReady = true;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Collection "${this.collectionName}" ready.`);
+      console.log(`Collection "${this.collectionName}" in database "${db.databaseName}" ready.`);
     }
 
     // Execute callbacks
-    this.collectionReadyCallbacks.forEach(cb => cb());
+    this.collectionReadyCallbacks[db.databaseName].forEach(cb => cb());
 
     // Remove callbacks
-    this.collectionReadyCallbacks.forEach(cb => {
+    this.collectionReadyCallbacks[db.databaseName].forEach(cb => {
       // Remove callback function
-      this.collectionReadyCallbacks.splice(this.collectionReadyCallbacks.indexOf(cb, 1));
+      this.collectionReadyCallbacks[db.databaseName].splice(this.collectionReadyCallbacks[db.databaseName].indexOf(cb, 1));
     });
   }
 
