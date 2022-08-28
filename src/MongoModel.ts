@@ -379,8 +379,8 @@ export class MongoModel<T = unknown> {
   exists(filter?: Filter<T>, queryOptions?: IQueryOptions): Promise<boolean> {
 
     return this.collection(queryOptions?.database)
-      .then(col => col.find(filter).limit(1).count())
-      .then(count => count === 1);
+      .then(col => col.countDocuments(filter))
+      .then(count => count > 1);
   }
 
   /**
