@@ -4,8 +4,6 @@ import * as mongodb from 'mongodb';
 import { getConnection } from './database';
 import { MongoModel } from '../src/MongoModel';
 
-const getDb = () => getConnection().then(c => c.db('mongodb-model-test'));
-
 
 interface IModel {
   ref: string
@@ -496,6 +494,32 @@ describe('MongoModel', () => {
       await model.delete({
         ref: 'MongoModel.populate()'
       });
+    });
+  });
+
+
+
+  describe('MongoModel.create()', () => {
+    it('should be able to use other database', async () => {
+
+      const insertData: IModel = {
+        ref: 'MongoModel.create()'
+      };
+
+      await model.create({ ...insertData, prop1: 'db1' }, { database: 'mongodb-model-test' });
+      await model.create({ ...insertData, prop1: 'db2' }, { database: 'mongodb-model-test_alt' });
+
+      expect(await model.exists({ ...insertData, prop1: 'db1' }, { database: 'mongodb-model-test' })).to.be.true;
+      expect(await model.exists({ ...insertData, prop1: 'db2' }, { database: 'mongodb-model-test' })).to.be.false;
+
+      expect(await model.exists({ ...insertData, prop1: 'db1' }, { database: 'mongodb-model-test_alt' })).to.be.false;
+      expect(await model.exists({ ...insertData, prop1: 'db2' }, { database: 'mongodb-model-test_alt' })).to.be.true;
+    });
+
+    after(async () => {
+      await model.delete({
+        ref: 'MongoModel.create()'
+      }, {}, { database: 'mongodb-model-test_alt' });
     });
   });
 

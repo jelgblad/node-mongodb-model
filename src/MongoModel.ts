@@ -22,6 +22,7 @@ export type IQueryOptions = {
   [key: string]: unknown
 
   // "hard-coded" properties
+  database?: string
   populate?: string[]
 }
 
@@ -42,6 +43,8 @@ type MaybePromise<T> = Promise<T> | T;
 type AnyHookPost = (...args) => void;
 type AnyHook = (...args) => MaybePromise<AnyHookPost | void>;
 
+type PopulateCallback = (doc: any, queryOptions?: IQueryOptions) => MaybePromise<any>;
+
 export type IndexDefinition = { indexSpec: IndexSpecification, options?: CreateIndexesOptions }
 
 export class MongoModel<T = unknown> {
@@ -56,7 +59,7 @@ export class MongoModel<T = unknown> {
   private getConnection: () => Promise<MongoClient>
 
   /** @ignore */
-  private options?: IModelOptions
+  private _options?: IModelOptions
 
   /** @ignore */
   private collectionReadyInDatabases: string[] = [];
@@ -68,11 +71,11 @@ export class MongoModel<T = unknown> {
 
   /** @ignore */
   private populateCallbacks: {
-    [property: string]: ((doc: any) => Promise<any>)
+    [property: string]: (PopulateCallback)
   } = {}
 
-  /** @ignore */
-  private _schema: IMongoJSONSchema;
+  // /** @ignore */
+  // private _schema: IMongoJSONSchema;
 
 
   constructor(getConnection: () => Promise<MongoClient>, collectionName: string, options?: IModelOptions) {
@@ -82,23 +85,23 @@ export class MongoModel<T = unknown> {
     this.collectionName = collectionName;
     // this.schema = options?.schema
     // this.indexDefinitions = options?.indices
-    this.options = options;
+    this._options = options;
 
-    this._schema = options && options.schema;
+    // this._schema = options && options.schema;
 
     // this.prepareCollection(options);
 
     this.onFind((f, queryOptions) => async doc => {
       if (queryOptions && queryOptions.populate && doc) {
-        await this._populateAll(doc, queryOptions.populate);
+        await this._populateAll(doc, queryOptions);
       }
     });
   }
 
-  
+
   collection(database?: string) {
 
-    const _database = database || this.options?.defaultDatabase;
+    const _database = database || this._options?.defaultDatabase;
 
     return new Promise<Collection<T>>(resolve => {
       this.getConnection().then(c => c.db(_database)).then(db => {
@@ -135,10 +138,10 @@ export class MongoModel<T = unknown> {
     const db = await this.getConnection().then(c => c.db(database));
 
     const validator = {
-      ...(this.options?.schema && { $jsonSchema: this.options.schema })
+      ...(this._options?.schema && { $jsonSchema: this._options.schema })
     };
-    const validationAction = this.options?.validationAction || undefined;
-    const validationLevel = this.options?.validationLevel || undefined;
+    const validationAction = this._options?.validationAction || undefined;
+    const validationLevel = this._options?.validationLevel || undefined;
 
     const collectionExists = await db.listCollections({ name: this.collectionName }).toArray().then(cols => cols.length > 0);
 
@@ -152,9 +155,9 @@ export class MongoModel<T = unknown> {
         await db.createCollection(this.collectionName, {
           ...(validationLevel && { validationAction }),
           ...(validationLevel && { validationLevel }),
-          ...(this.options?.schema && { validator }),
-          ...(this.options?.timeseries && { timeseries: this.options?.timeseries.timeseries }),
-          ...(this.options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: this.options?.timeseries.expireAfterSeconds }),
+          ...(this._options?.schema && { validator }),
+          ...(this._options?.timeseries && { timeseries: this._options?.timeseries.timeseries }),
+          ...(this._options?.timeseries?.expireAfterSeconds && { expireAfterSeconds: this._options?.timeseries.expireAfterSeconds }),
         });
       }
       catch (err) {
@@ -164,7 +167,7 @@ export class MongoModel<T = unknown> {
     else {
 
       // Update schema
-      if (this.options?.schema) {
+      if (this._options?.schema) {
 
         if (process.env.NODE_ENV === 'development') {
           console.log(`Updating validator for collection "${this.collectionName}" in database "${db.databaseName}"...`);
@@ -177,7 +180,7 @@ export class MongoModel<T = unknown> {
       }
 
       // Update timeseries
-      if (this.options?.timeseries) {
+      if (this._options?.timeseries) {
 
         if (process.env.NODE_ENV === 'development') {
           console.log(`Updating timeseries options for collection "${this.collectionName}" in database "${db.databaseName}"...`);
@@ -186,12 +189,12 @@ export class MongoModel<T = unknown> {
         // Set expireAfterSeconds
         await db.command({
           collMod: this.collectionName,
-          expireAfterSeconds: this.options?.timeseries?.expireAfterSeconds
+          expireAfterSeconds: this._options?.timeseries?.expireAfterSeconds
         });
       }
     }
 
-    if (this.options?.indices) {
+    if (this._options?.indices) {
 
       if (process.env.NODE_ENV === 'development') {
         console.log(`Updating indices for collection "${this.collectionName}" in database "${db.databaseName}"...`);
@@ -203,7 +206,7 @@ export class MongoModel<T = unknown> {
       await col.dropIndexes();
 
       // Recreate indexes
-      this.options.indices.forEach(async def => {
+      this._options.indices.forEach(async def => {
         await col.createIndex(def.indexSpec, def.options);
       });
     }
@@ -262,7 +265,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onFind(
-    hook: (filter: Filter<T>, queryOptions: void | IQueryOptions) =>
+    hook: (filter: Filter<T>, queryOptions?: IQueryOptions) =>
       MaybePromise<((doc: T | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnFind.push(hook);
@@ -287,7 +290,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onCreate(
-    hook: (data: OptionalId<T>, queryOptions: void | IQueryOptions) =>
+    hook: (data: OptionalId<T>, queryOptions?: IQueryOptions) =>
       MaybePromise<((result: InsertOneResult<T> | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnCreate.push(hook);
@@ -312,7 +315,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onUpdate(
-    hook: (filter: Filter<T>, updateFilter: UpdateFilter<T>, queryOptions: void | IQueryOptions) =>
+    hook: (filter: Filter<T>, updateFilter: UpdateFilter<T>, queryOptions?: IQueryOptions) =>
       MaybePromise<((result: UpdateResult | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnUpdate.push(hook);
@@ -337,7 +340,7 @@ export class MongoModel<T = unknown> {
    * @category Hooks
    */
   onDelete(
-    hook: (filter: Filter<T>, queryOptions: void | IQueryOptions) =>
+    hook: (filter: Filter<T>, queryOptions?: IQueryOptions) =>
       MaybePromise<((result: DeleteResult | void, err?: any) => MaybePromise<void>) | void>
   ) {
     this._hooksOnDelete.push(hook);
@@ -358,7 +361,7 @@ export class MongoModel<T = unknown> {
     * 
     * @category Hooks
     */
-  populate(property: string, callback: (doc: T) => Promise<any> | any) {
+  populate(property: string, callback: PopulateCallback) {
 
     if (process.env.NODE_ENV === 'development') {
       if (this.populateCallbacks[property]) {
@@ -373,9 +376,9 @@ export class MongoModel<T = unknown> {
   /**
    * @category Queries
    */
-  exists(filter?: Filter<T>): Promise<boolean> {
+  exists(filter?: Filter<T>, queryOptions?: IQueryOptions): Promise<boolean> {
 
-    return this.collection()
+    return this.collection(queryOptions?.database)
       .then(col => col.find(filter).limit(1).count())
       .then(count => count === 1);
   }
@@ -385,7 +388,7 @@ export class MongoModel<T = unknown> {
    */
   async find(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<T[]> {
 
-    const col = await this.collection();
+    const col = await this.collection(queryOptions?.database);
 
     // Call pre-hooks
     const [postHooks, error] = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
@@ -418,7 +421,7 @@ export class MongoModel<T = unknown> {
    */
   async findOne(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions): Promise<void | T> {
 
-    const col = await this.collection();
+    const col = await this.collection(queryOptions?.database);
 
     // Call pre-hooks
     const [postHooks, error] = await this._callPreHooks(this._hooksOnFind, filter, queryOptions);
@@ -452,7 +455,7 @@ export class MongoModel<T = unknown> {
    */
   async create(data: Partial<OptionalId<T>>, queryOptions?: IQueryOptions) {
 
-    const col = await this.collection();
+    const col = await this.collection(queryOptions?.database);
 
     // Call pre-hooks
     const [postHooks, error] = await this._callPreHooks(this._hooksOnCreate, data, queryOptions);
@@ -483,7 +486,7 @@ export class MongoModel<T = unknown> {
    */
   async update(filter: Filter<T>, updateFilter: UpdateFilter<T>, options?: UpdateOptions, queryOptions?: IQueryOptions) {
 
-    const col = await this.collection();
+    const col = await this.collection(queryOptions?.database);
 
     // Call pre-hooks
     const [postHooks, error] = await this._callPreHooks(this._hooksOnUpdate, filter, updateFilter, queryOptions);
@@ -514,7 +517,7 @@ export class MongoModel<T = unknown> {
    */
   async delete(filter?: Filter<T>, options?: FindOptions<T>, queryOptions?: IQueryOptions) {
 
-    const col = await this.collection();
+    const col = await this.collection(queryOptions?.database);
 
     // Call pre-hooks
     const [postHooks, error] = await this._callPreHooks(this._hooksOnDelete, filter, queryOptions);
@@ -541,11 +544,13 @@ export class MongoModel<T = unknown> {
   }
 
   /** @ignore */
-  private async _populateAll(doc: any, properties: string[]) {
+  private async _populateAll(doc: any, queryOptions?: IQueryOptions) {
+
+    const properties = queryOptions?.populate || [];
 
     if (!doc) return;
 
-    const populatedProps = await Promise.all(properties.map(prop => this._populate(doc, prop)));
+    const populatedProps = await Promise.all(properties.map(prop => this._populate(doc, prop, queryOptions)));
 
     for (let i = 0; i < properties.length; i++) {
       if (populatedProps[i]) {
@@ -557,7 +562,7 @@ export class MongoModel<T = unknown> {
   }
 
   /** @ignore */
-  private async _populate(doc: any, property: string) {
+  private async _populate(doc: any, property: string, queryOptions?: IQueryOptions) {
 
     if (this.populateCallbacks[property]) {
 
@@ -565,7 +570,7 @@ export class MongoModel<T = unknown> {
       const docClone = deserialize(serialize(doc));
 
       // Call populate callback for property
-      return this.populateCallbacks[property](docClone);
+      return this.populateCallbacks[property](docClone, queryOptions);
     }
     else {
       if (process.env.NODE_ENV === 'development') {
@@ -583,7 +588,7 @@ export class MongoModel<T = unknown> {
      * @category Hooks
      */
     trimObject: (obj) => {
-      return this._trimObjectShallow(obj, this._schema);
+      return this._trimObjectShallow(obj, this._options?.schema || {});
     }
   }
 
