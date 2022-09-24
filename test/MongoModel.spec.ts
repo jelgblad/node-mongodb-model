@@ -58,7 +58,7 @@ describe('MongoModel', () => {
     });
 
     before(() => {
-      model.onCreate((d, args) => {
+      model.onCreate((d, o, args) => {
         d.prop1 = 'defined in pre hook';
 
         // Attach hookArgs to data
@@ -104,7 +104,7 @@ describe('MongoModel', () => {
         ref: 'MongoModel.onCreate()'
       };
 
-      await model.create(insertData, { arg1: 'value1' });
+      await model.create(insertData, {}, { arg1: 'value1' });
 
       expect(insertData.prop5).to.eql({ arg1: 'value1' });
     });
@@ -124,7 +124,7 @@ describe('MongoModel', () => {
       model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
-      model.onFind((f, args) => {
+      model.onFind((f, o, args) => {
         f.prop1 = 'b';
 
         // Attach hookArgs to filter
@@ -307,7 +307,7 @@ describe('MongoModel', () => {
       model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
-      model.onUpdate((f, uf, args) => {
+      model.onUpdate((f, uf, o, args) => {
         f.prop1 = 'defined in pre hook';
 
         // Attach hookArgs to filter
@@ -402,7 +402,7 @@ describe('MongoModel', () => {
       model = new MongoModel(getConnection, 'myCollection');
       await model.delete();
 
-      model.onDelete((f, args) => {
+      model.onDelete((f, o, args) => {
         f.prop1 = 'defined in pre hook';
 
         // Attach hookArgs to filter
@@ -506,20 +506,20 @@ describe('MongoModel', () => {
         ref: 'MongoModel.create()'
       };
 
-      await model.create({ ...insertData, prop1: 'db1' }, { database: 'mongodb-model-test' });
-      await model.create({ ...insertData, prop1: 'db2' }, { database: 'mongodb-model-test_alt' });
+      await model.create({ ...insertData, prop1: 'db1' }, { dbName: 'mongodb-model-test' });
+      await model.create({ ...insertData, prop1: 'db2' }, { dbName: 'mongodb-model-test_alt' });
 
-      expect(await model.exists({ ...insertData, prop1: 'db1' }, { database: 'mongodb-model-test' })).to.be.true;
-      expect(await model.exists({ ...insertData, prop1: 'db2' }, { database: 'mongodb-model-test' })).to.be.false;
+      expect(await model.exists({ ...insertData, prop1: 'db1' }, { dbName: 'mongodb-model-test' })).to.be.true;
+      expect(await model.exists({ ...insertData, prop1: 'db2' }, { dbName: 'mongodb-model-test' })).to.be.false;
 
-      expect(await model.exists({ ...insertData, prop1: 'db1' }, { database: 'mongodb-model-test_alt' })).to.be.false;
-      expect(await model.exists({ ...insertData, prop1: 'db2' }, { database: 'mongodb-model-test_alt' })).to.be.true;
+      expect(await model.exists({ ...insertData, prop1: 'db1' }, { dbName: 'mongodb-model-test_alt' })).to.be.false;
+      expect(await model.exists({ ...insertData, prop1: 'db2' }, { dbName: 'mongodb-model-test_alt' })).to.be.true;
     });
 
     after(async () => {
       await model.delete({
         ref: 'MongoModel.create()'
-      }, {}, { database: 'mongodb-model-test_alt' });
+      }, { dbName: 'mongodb-model-test_alt' });
     });
   });
 
