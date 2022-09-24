@@ -99,12 +99,19 @@ export class MongoModel<T = unknown> {
   }
 
 
+  db(database?: string) {
+    const _database = database || this._options?.defaultDatabase;
+    return this.getConnection().then(c => c.db(_database));
+  }
+
+
   collection(database?: string) {
 
-    const _database = database || this._options?.defaultDatabase;
+    // const _database = database || this._options?.defaultDatabase;
 
     return new Promise<Collection<T>>(resolve => {
-      this.getConnection().then(c => c.db(_database)).then(db => {
+      // this.getConnection().then(c => c.db(_database)).then(db => {
+        this.db(database).then(db => {
 
         // Return immediately if ready
         if (this.collectionReadyInDatabases.indexOf(db.databaseName) > -1) {
@@ -116,7 +123,7 @@ export class MongoModel<T = unknown> {
           this.collectionReadyCallbacks[db.databaseName] = [];
 
           // Prepare collection
-          this.prepareCollection(_database);
+          this.prepareCollection(database);
         }
 
         // Define callback function
@@ -134,8 +141,8 @@ export class MongoModel<T = unknown> {
   /** @ignore */
   private async prepareCollection(database?: string) {
 
-    // const db = await this.db();
-    const db = await this.getConnection().then(c => c.db(database));
+    const db = await this.db(database);
+    // const db = await this.getConnection().then(c => c.db(database));
 
     const validator = {
       ...(this._options?.schema && { $jsonSchema: this._options.schema })
