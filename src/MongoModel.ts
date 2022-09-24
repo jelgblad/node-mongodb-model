@@ -380,7 +380,7 @@ export class MongoModel<T = unknown> {
 
     return this.collection(queryOptions?.database)
       .then(col => col.countDocuments(filter))
-      .then(count => count > 1);
+      .then(count => count >= 1);
   }
 
   /**
