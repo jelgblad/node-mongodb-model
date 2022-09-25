@@ -128,7 +128,9 @@ describe('MongoModel', () => {
         f.prop1 = 'b';
 
         // Attach hookArgs to filter
-        f.prop5 = args;
+        if (args.test) {
+          f.prop5 = args.test;
+        }
 
         return doc => {
           if (doc) {
@@ -159,6 +161,9 @@ describe('MongoModel', () => {
 
       const docs = await model.find(filter);
 
+      // console.log(filter);
+      // console.log(docs);
+
       expect(filter.prop1).to.equal('b');
       expect(docs).length(1);
       expect(docs[0].prop2).to.equal('b');
@@ -183,7 +188,7 @@ describe('MongoModel', () => {
         ref: 'MongoModel.onFind()',
       };
 
-      await model.find(filter, {}, { arg1: 'value1' });
+      await model.find(filter, {}, { test: { arg1: 'value1' } });
 
       expect(filter.prop5).to.eql({ arg1: 'value1' });
     });
