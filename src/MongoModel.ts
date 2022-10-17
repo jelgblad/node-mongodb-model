@@ -107,35 +107,33 @@ export class MongoModel<T = unknown> {
   }
 
 
-  collection(database?: string) {
+  async collection(database?: string): Promise<Collection<T>> {
 
-    // const _database = database || this._options?.defaultDatabase;
+    // Get database
+    const db = await this.db(database);
 
     return new Promise<Collection<T>>(resolve => {
-      // this.getConnection().then(c => c.db(_database)).then(db => {
-      this.db(database).then(db => {
 
-        // Return immediately if ready
-        if (this.collectionReadyInDatabases.indexOf(db.databaseName) > -1) {
-          return resolve(db.collection(this.collectionName));
-        }
-        else if (!(db.databaseName in this.collectionReadyCallbacks)) {
+      // Return immediately if ready
+      if (this.collectionReadyInDatabases.indexOf(db.databaseName) > -1) {
+        return resolve(db.collection(this.collectionName));
+      }
+      else if (!(db.databaseName in this.collectionReadyCallbacks)) {
 
-          // Create array for callbacks
-          this.collectionReadyCallbacks[db.databaseName] = [];
+        // Create array for callbacks
+        this.collectionReadyCallbacks[db.databaseName] = [];
 
-          // Prepare collection
-          this.prepareCollection(database);
-        }
+        // Prepare collection
+        this.prepareCollection(database);
+      }
 
-        // Define callback function
-        const cb = () => {
-          // Resolve promise
-          return resolve(db.collection(this.collectionName));
-        };
-        // Add callback function
-        this.collectionReadyCallbacks[db.databaseName].push(cb);
-      });
+      // Define callback function
+      const cb = () => {
+        // Resolve promise
+        return resolve(db.collection(this.collectionName));
+      };
+      // Add callback function
+      this.collectionReadyCallbacks[db.databaseName].push(cb);
     });
   }
 
