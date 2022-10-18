@@ -213,9 +213,10 @@ export class MongoModel<T = unknown> {
       await col.dropIndexes();
 
       // Recreate indexes
-      this._options.indices.forEach(async def => {
+      for (const key in this._options.indices) {
+        const def = this._options.indices[key];
         await col.createIndex(def.indexSpec, def.options);
-      });
+      }
     }
 
     // Set isCollectionReady-flag
